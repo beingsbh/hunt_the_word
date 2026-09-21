@@ -1,0 +1,60 @@
+/// Categorized dictionary of words for thematic puzzle generation.
+class CategoryVocabulary {
+  CategoryVocabulary._();
+
+  static const Map<String, List<String>> categories = {
+    'Nature Walk': [
+      'TREE', 'LEAF', 'BUSH', 'WOOD', 'ROCK', 'SOIL', 'POND', 'BIRD',
+      'GRASS', 'FERN', 'MOSS', 'BARK', 'TWIG', 'ROOT', 'SEED', 'PINE',
+      'FLOWER', 'FOREST', 'STREAM', 'VALLEY', 'MEADOW', 'TRAIL', 'BRANCH',
+    ],
+    'Forest Flora': [
+      'FERN', 'MOSS', 'PINE', 'OAK', 'ELM', 'BIRCH', 'MAPLE', 'CEDAR',
+      'ACORN', 'SHRUB', 'BERRY', 'VINE', 'BLOOM', 'LEAF', 'BARK', 'STEM',
+      'GROVE', 'TIMBER', 'CANOPY', 'BRANCH', 'SAPLING', 'FOLIAGE',
+    ],
+    'Ocean Creatures': [
+      'FISH', 'SEAL', 'CRAB', 'CLAM', 'EEL', 'SHARK', 'WHALE', 'SQUID',
+      'CORAL', 'OTTER', 'TUNA', 'RAY', 'ORCA', 'GULL', 'KELP', 'REEF',
+      'DOLPHIN', 'LOBSTER', 'OCTOPUS', 'STARFISH', 'SEAHORSE', 'ANEMONE',
+    ],
+    'Safari Quest': [
+      'LION', 'ZEBRA', 'RHINO', 'BULL', 'HAWK', 'BEAR', 'WOLF', 'DEER',
+      'TIGER', 'HYENA', 'CAMEL', 'HIPPO', 'EAGLE', 'CHETAH', 'BABOON',
+      'GIRAFFE', 'LEOPARD', 'BUFFALO', 'GAZELLE', 'MEERKAT', 'ANTELOPE',
+    ],
+    'Mountain Peak': [
+      'PEAK', 'CLIFF', 'ROCK', 'SNOW', 'ICE', 'COLD', 'WIND', 'MIST',
+      'SLOPE', 'TRAIL', 'CREEK', 'RIDGE', 'GLACIER', 'SUMMIT', 'CANYON',
+      'BOULDER', 'PLATEAU', 'AVALANCHE', 'ALTITUDE',
+    ],
+    'Cosmic Wonders': [
+      'STAR', 'MOON', 'SUN', 'MARS', 'NOVA', 'COMET', 'ORBIT', 'SPACE',
+      'VENUS', 'PLUTO', 'ASTRO', 'SOLAR', 'LUNAR', 'METEOR', 'PLANET',
+      'GALAXY', 'NEBULA', 'COSMOS', 'ECLIPSE', 'GRAVITY', 'JUPITER',
+    ],
+    'Autumn Breeze': [
+      'LEAF', 'WIND', 'CORN', 'RUST', 'COLD', 'MIST', 'GOLD', 'CHILL',
+      'ACORN', 'FROST', 'CIDER', 'PUMPKIN', 'HARVEST', 'AMBER', 'SCARF',
+      'CRISP', 'SWEATER', 'BLANKET', 'BONFIRE', 'CHESTNUT',
+    ],
+  };
+
+  /// Returns words for a category filtered by minimum and maximum length.
+  static List<String> getWordsForCategory(
+    String category, {
+    int minLength = 3,
+    int maxLength = 8,
+  }) {
+    final list = categories[category] ?? categories['Nature Walk']!;
+    return list
+        .where((w) => w.length >= minLength && w.length <= maxLength)
+        .toList();
+  }
+
+  /// Default fallback list of words
+  static const List<String> generalWords = [
+    'HUNT', 'WORD', 'PLAY', 'FIND', 'GAME', 'STAR', 'COIN', 'MAP',
+    'PUZZLE', 'SEARCH', 'SOLVE', 'LEVEL', 'QUEST', 'BRAIN', 'SMART',
+  ];
+}
