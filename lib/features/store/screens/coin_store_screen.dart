@@ -487,7 +487,7 @@ class CoinStoreScreen extends StatelessWidget {
                     ],
                   ),
 
-                  // Tactile Price Button (No INR, pure numerical price)
+                  // Tactile Price Button with Rupee Icon
                   ElevatedButton(
                     onPressed: () => _onPurchase(context, pack, profile),
                     style: ElevatedButton.styleFrom(
@@ -501,13 +501,24 @@ class CoinStoreScreen extends StatelessWidget {
                         borderRadius: AppRadius.radiusPill,
                       ),
                     ),
-                    child: Text(
-                      '${pack.price}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.6,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.currency_rupee_rounded,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        Text(
+                          '${pack.price}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -765,12 +776,22 @@ class _PurchaseConfirmSheet extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Text(
-                    '${pack.price}',
-                    style: AppTextStyles.headlineLarge(
-                      fontWeight: FontWeight.w900,
-                      color: theme.colorScheme.primary,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.currency_rupee_rounded,
+                        size: 26,
+                        color: theme.colorScheme.primary,
+                      ),
+                      Text(
+                        '${pack.price}',
+                        style: AppTextStyles.headlineLarge(
+                          fontWeight: FontWeight.w900,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -792,7 +813,7 @@ class _PurchaseConfirmSheet extends StatelessWidget {
                 Expanded(
                   flex: 2,
                   child: AppButton(
-                    text: 'GET FOR ${pack.price}',
+                    text: 'GET FOR ₹${pack.price}',
                     icon: Icons.check_circle_rounded,
                     height: 48,
                     onPressed: onConfirm,
