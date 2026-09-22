@@ -104,7 +104,9 @@ class LetterCellWidget extends StatelessWidget {
       scale: scale,
       duration: const Duration(milliseconds: 140),
       curve: Curves.easeOutBack,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
         width: size,
         height: size,
         decoration: BoxDecoration(
@@ -114,13 +116,15 @@ class LetterCellWidget extends StatelessWidget {
           boxShadow: shadows,
         ),
         alignment: Alignment.center,
-        child: Text(
-          letter.toUpperCase(),
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 140),
+          curve: Curves.easeOut,
           style: GoogleFonts.outfit(
             fontSize: fontSize,
             fontWeight: FontWeight.w800,
             color: fg,
           ),
+          child: Text(letter.toUpperCase()),
         ),
       ),
     );

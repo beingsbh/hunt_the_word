@@ -69,17 +69,53 @@ class AppCard extends StatelessWidget {
     }
 
     if (onTap != null) {
-      return Material(
-        color: Colors.transparent,
+      return _AppCardPressable(
+        onTap: onTap!,
         borderRadius: effectiveRadius,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: effectiveRadius,
-          child: content,
-        ),
+        child: content,
       );
     }
 
     return content;
+  }
+}
+
+class _AppCardPressable extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final BorderRadius borderRadius;
+
+  const _AppCardPressable({
+    required this.child,
+    required this.onTap,
+    required this.borderRadius,
+  });
+
+  @override
+  State<_AppCardPressable> createState() => _AppCardPressableState();
+}
+
+class _AppCardPressableState extends State<_AppCardPressable> {
+  bool _isDown = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: _isDown ? 0.98 : 1.0,
+      duration: const Duration(milliseconds: 90),
+      curve: Curves.easeInOut,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: widget.borderRadius,
+        child: InkWell(
+          onTapDown: (_) => setState(() => _isDown = true),
+          onTapUp: (_) => setState(() => _isDown = false),
+          onTapCancel: () => setState(() => _isDown = false),
+          onTap: widget.onTap,
+          borderRadius: widget.borderRadius,
+          child: widget.child,
+        ),
+      ),
+    );
   }
 }

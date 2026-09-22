@@ -55,36 +55,53 @@ class _GameScreenContentState extends State<_GameScreenContent> {
   void _checkVictory(GameProvider vm) {
     if (vm.isLevelCompleted && !_victoryDialogShown) {
       _victoryDialogShown = true;
+      final earnedStars = vm.elapsedSeconds < 180
+          ? 3
+          : (vm.elapsedSeconds < 300 ? 2 : 1);
+      final earnedScore = 500 + (vm.totalWords * 50);
+
+      // Persist level completion, score, and coins
+      context.read<LevelProgressProvider>().completeLevel(
+        vm.levelNumber,
+        earnedStars,
+        earnedScore,
+      );
+      context.read<PlayerProfileProvider>().updateCoins(25);
+      context.read<PlayerProfileProvider>().incrementWordsFound(
+        vm.totalWords,
+      );
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showDialog(
           context: context,
           barrierDismissible: false,
           builder: (dialogCtx) => LevelCompleteDialog(
             levelNumber: vm.levelNumber,
-            stars: vm.elapsedSeconds < 180
-                ? 3
-                : (vm.elapsedSeconds < 300 ? 2 : 1),
-            score: 500 + (vm.totalWords * 50),
+            stars: earnedStars,
+            score: earnedScore,
             time: vm.formattedTime,
             coinsEarned: 25,
+            onPreviousLevel: vm.levelNumber > 1
+                ? () {
+                    Navigator.of(dialogCtx).pop();
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => GameScreen(
+                          levelNumber: vm.levelNumber - 1,
+                          category: vm.category,
+                        ),
+                      ),
+                    );
+                  }
+                : null,
             onNextLevel: () {
               Navigator.of(dialogCtx).pop();
-              context.read<LevelProgressProvider>().completeLevel(
-                vm.levelNumber,
-                3,
-                850,
-              );
-              context.read<PlayerProfileProvider>().updateCoins(25);
-              context.read<PlayerProfileProvider>().incrementWordsFound(
-                vm.totalWords,
-              );
-
               // Navigate to next level
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (_) => GameScreen(
                     levelNumber: vm.levelNumber + 1,
-                    category: 'Ocean Sanctuary',
+                    category: vm.category,
                   ),
                 ),
               );
@@ -124,6 +141,24 @@ class _GameScreenContentState extends State<_GameScreenContent> {
       appBar: AppCustomBar(
         title: 'LEVEL ${vm.levelNumber} - ${vm.category}',
         actions: [
+          if (vm.levelNumber > 1)
+            IconButton(
+              icon: Icon(
+                Icons.skip_previous_rounded,
+                color: theme.colorScheme.onSurface,
+              ),
+              tooltip: 'Previous Level',
+              onPressed: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => GameScreen(
+                      levelNumber: vm.levelNumber - 1,
+                      category: vm.category,
+                    ),
+                  ),
+                );
+              },
+            ),
           IconButton(
             icon: Icon(
               Icons.settings_outlined,
@@ -240,22 +275,29 @@ class _GameScreenContentState extends State<_GameScreenContent> {
                             ),
                             child: Align(
                               alignment: Alignment.centerLeft,
-                              child: FractionallySizedBox(
-                                widthFactor: vm.progressFraction.clamp(
-                                  0.0,
-                                  1.0,
+                              child: TweenAnimationBuilder<double>(
+                                tween: Tween<double>(
+                                  begin: 0.0,
+                                  end: vm.progressFraction.clamp(0.0, 1.0),
                                 ),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        AppColors.primaryCyan,
-                                        theme.colorScheme.primary,
-                                      ],
+                                duration: const Duration(milliseconds: 320),
+                                curve: Curves.easeOutCubic,
+                                builder: (context, fillFactor, _) {
+                                  return FractionallySizedBox(
+                                    widthFactor: fillFactor,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            AppColors.primaryCyan,
+                                            theme.colorScheme.primary,
+                                          ],
+                                        ),
+                                        borderRadius: AppRadius.radiusPill,
+                                      ),
                                     ),
-                                    borderRadius: AppRadius.radiusPill,
-                                  ),
-                                ),
+                                  );
+                                },
                               ),
                             ),
                           ),
@@ -364,7 +406,7 @@ class _GameScreenContentState extends State<_GameScreenContent> {
 
                     // Primary Hint Button
                     Expanded(
-                      child: GestureDetector(
+                      child: _InteractiveScaleWrapper(
                         onTap: () {
                           final success = vm.useLetterHint();
                           if (success) {
@@ -450,30 +492,37 @@ class _GameScreenContentState extends State<_GameScreenContent> {
   }
 
   Widget _buildStarMarker(bool isActive) {
-    return Container(
-      width: 18,
-      height: 18,
-      decoration: BoxDecoration(
-        color: isActive ? AppColors.coinGold : Colors.white,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isActive ? AppColors.coinGoldDark : Colors.grey.shade400,
-          width: 1.5,
+    return AnimatedScale(
+      scale: isActive ? 1.2 : 0.9,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.elasticOut,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        width: 18,
+        height: 18,
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.coinGold : Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isActive ? AppColors.coinGoldDark : Colors.grey.shade400,
+            width: 1.5,
+          ),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: AppColors.coinGold.withValues(alpha: 0.6),
+                    blurRadius: 6,
+                    spreadRadius: 1.5,
+                  ),
+                ]
+              : null,
         ),
-        boxShadow: isActive
-            ? [
-                BoxShadow(
-                  color: AppColors.coinGold.withValues(alpha: 0.5),
-                  blurRadius: 4,
-                  spreadRadius: 1,
-                ),
-              ]
-            : null,
-      ),
-      child: Icon(
-        Icons.star_rounded,
-        size: 12,
-        color: isActive ? Colors.white : Colors.grey.shade400,
+        child: Icon(
+          Icons.star_rounded,
+          size: 12,
+          color: isActive ? Colors.white : Colors.grey.shade400,
+        ),
       ),
     );
   }
@@ -484,27 +533,58 @@ class _GameScreenContentState extends State<_GameScreenContent> {
   }) {
     final theme = Theme.of(context);
 
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return _InteractiveScaleWrapper(
+      onTap: onTap,
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: theme.cardTheme.color,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+            width: 1.2,
           ),
-        ],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(icon, color: theme.colorScheme.primary, size: 22),
       ),
-      child: IconButton(
-        icon: Icon(icon, color: theme.colorScheme.primary, size: 22),
-        onPressed: onTap,
+    );
+  }
+}
+
+class _InteractiveScaleWrapper extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+
+  const _InteractiveScaleWrapper({required this.child, this.onTap});
+
+  @override
+  State<_InteractiveScaleWrapper> createState() =>
+      _InteractiveScaleWrapperState();
+}
+
+class _InteractiveScaleWrapperState extends State<_InteractiveScaleWrapper> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _pressed ? 0.93 : 1.0,
+        duration: const Duration(milliseconds: 90),
+        curve: Curves.easeInOut,
+        child: widget.child,
       ),
     );
   }

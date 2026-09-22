@@ -136,65 +136,76 @@ class DailyChallengeScreen extends StatelessWidget {
                   const SizedBox(height: AppSpacing.sm),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: daily.weeklyCalendar.map((day) {
+                    children: daily.weeklyCalendar.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final day = entry.value;
                       final isToday = day.isToday;
-                      return Container(
-                        width: 40,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isToday
-                              ? const Color(0xFF6C5CE7)
-                              : (day.isCompleted
-                                    ? AppColors.primaryEmerald.withValues(
-                                        alpha: 0.12,
-                                      )
-                                    : Colors.transparent),
-                          borderRadius: AppRadius.radiusMd,
-                          border: Border.all(
+                      return TweenAnimationBuilder<double>(
+                        tween: Tween<double>(begin: 0.75, end: 1.0),
+                        duration: Duration(milliseconds: 200 + index * 40),
+                        curve: Curves.elasticOut,
+                        builder: (context, scale, child) => Transform.scale(
+                          scale: scale,
+                          child: child,
+                        ),
+                        child: Container(
+                          width: 40,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
                             color: isToday
                                 ? const Color(0xFF6C5CE7)
                                 : (day.isCompleted
-                                      ? AppColors.primaryEmerald
-                                      : Colors.grey.shade300),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              day.dayName,
-                              style: TextStyle(
-                                color: isToday
-                                    ? Colors.white
-                                    : (day.isCompleted
-                                          ? AppColors.primaryEmerald
-                                          : Colors.grey),
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
+                                      ? AppColors.primaryEmerald.withValues(
+                                          alpha: 0.12,
+                                        )
+                                      : Colors.transparent),
+                            borderRadius: AppRadius.radiusMd,
+                            border: Border.all(
+                              color: isToday
+                                  ? const Color(0xFF6C5CE7)
+                                  : (day.isCompleted
+                                        ? AppColors.primaryEmerald
+                                        : Colors.grey.shade300),
                             ),
-                            const SizedBox(height: 4),
-                            if (day.isCompleted)
-                              const Icon(
-                                Icons.check_rounded,
-                                size: 16,
-                                color: AppColors.primaryEmerald,
-                              )
-                            else if (day.isLocked)
-                              const Icon(
-                                Icons.lock_rounded,
-                                size: 14,
-                                color: Colors.grey,
-                              )
-                            else
+                          ),
+                          child: Column(
+                            children: [
                               Text(
-                                '${day.dateNumber}',
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                day.dayName,
+                                style: TextStyle(
+                                  color: isToday
+                                      ? Colors.white
+                                      : (day.isCompleted
+                                            ? AppColors.primaryEmerald
+                                            : Colors.grey),
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 14,
                                 ),
                               ),
-                          ],
+                              const SizedBox(height: 4),
+                              if (day.isCompleted)
+                                const Icon(
+                                  Icons.check_rounded,
+                                  size: 16,
+                                  color: AppColors.primaryEmerald,
+                                )
+                              else if (day.isLocked)
+                                const Icon(
+                                  Icons.lock_rounded,
+                                  size: 14,
+                                  color: Colors.grey,
+                                )
+                              else
+                                Text(
+                                  '${day.dateNumber}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       );
                     }).toList(),
@@ -215,17 +226,26 @@ class DailyChallengeScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: AppColors.warning,
-                      borderRadius: AppRadius.radiusMd,
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0.6, end: 1.0),
+                    duration: const Duration(milliseconds: 380),
+                    curve: Curves.elasticOut,
+                    builder: (context, scale, child) => Transform.scale(
+                      scale: scale,
+                      child: child,
                     ),
-                    child: const Icon(
-                      Icons.local_fire_department_rounded,
-                      color: Colors.white,
-                      size: 28,
+                    child: Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: AppColors.warning,
+                        borderRadius: AppRadius.radiusMd,
+                      ),
+                      child: const Icon(
+                        Icons.local_fire_department_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
@@ -501,17 +521,26 @@ class DailyChallengeScreen extends StatelessWidget {
               padding: AppSpacing.paddingSm,
               child: Row(
                 children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0.6, end: 1.0),
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.elasticOut,
+                    builder: (context, scale, child) => Transform.scale(
+                      scale: scale,
+                      child: child,
                     ),
-                    child: const Icon(
-                      Icons.check_rounded,
-                      color: AppColors.success,
-                      size: 20,
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_rounded,
+                        color: AppColors.success,
+                        size: 20,
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),

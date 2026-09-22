@@ -390,28 +390,49 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: AppRadius.radiusPill,
-                      child: Container(
-                        height: 8,
-                        color: Colors.white.withValues(alpha: 0.25),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: FractionallySizedBox(
-                            widthFactor: 0.8,
-                            child: Container(color: AppColors.primaryEmerald),
+                    TweenAnimationBuilder<double>(
+                      tween: Tween<double>(begin: 0.0, end: 0.8),
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, factor, _) {
+                        return ClipRRect(
+                          borderRadius: AppRadius.radiusPill,
+                          child: Container(
+                            height: 8,
+                            color: Colors.white.withValues(alpha: 0.25),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: FractionallySizedBox(
+                                widthFactor: factor,
+                                child: Container(
+                                  color: AppColors.primaryEmerald,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    AppButton(
-                      text: 'CONTINUE PLAYING',
-                      icon: Icons.play_arrow_rounded,
-                      customColor: Colors.white,
-                      onPressed: () =>
-                          _onPlayLevel(context, level: profile.currentLevel),
-                      height: 48,
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: AppRadius.radiusMd,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.12),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: AppButton(
+                        text: 'CONTINUE PLAYING',
+                        icon: Icons.play_arrow_rounded,
+                        customColor: Colors.white,
+                        onPressed: () =>
+                            _onPlayLevel(context, level: profile.currentLevel),
+                        height: 48,
+                      ),
                     ),
                   ],
                 ),
@@ -678,7 +699,16 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Column(
         children: [
-          Icon(icon, color: iconColor, size: 20),
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0.7, end: 1.0),
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.elasticOut,
+            builder: (context, scale, child) => Transform.scale(
+              scale: scale,
+              child: child,
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
           const SizedBox(height: 4),
           Text(
             value,

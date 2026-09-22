@@ -110,19 +110,26 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  ClipRRect(
-                    borderRadius: AppRadius.radiusPill,
-                    child: Container(
-                      height: 8,
-                      color: Colors.white.withValues(alpha: 0.25),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: FractionallySizedBox(
-                          widthFactor: 0.5,
-                          child: Container(color: AppColors.coinGold),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0.0, end: 0.5),
+                    duration: const Duration(milliseconds: 550),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, factor, _) {
+                      return ClipRRect(
+                        borderRadius: AppRadius.radiusPill,
+                        child: Container(
+                          height: 8,
+                          color: Colors.white.withValues(alpha: 0.25),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: FractionallySizedBox(
+                              widthFactor: factor,
+                              child: Container(color: AppColors.coinGold),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -173,7 +180,9 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
     final isSelected = _selectedFilterIndex == index;
     return GestureDetector(
       onTap: () => setState(() => _selectedFilterIndex = index),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: 8,
@@ -184,14 +193,24 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
           border: Border.all(
             color: isSelected ? const Color(0xFF6C5CE7) : Colors.grey.shade300,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF6C5CE7).withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
-        child: Text(
-          label,
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 200),
           style: TextStyle(
             color: isSelected ? Colors.white : Colors.grey.shade700,
             fontWeight: FontWeight.bold,
             fontSize: 12,
           ),
+          child: Text(label),
         ),
       ),
     );
@@ -566,14 +585,23 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   }
 
   Widget _buildBadgeIcon(IconData icon, Color color) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: AppRadius.radiusMd,
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.75, end: 1.0),
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.elasticOut,
+      builder: (context, scale, child) => Transform.scale(
+        scale: scale,
+        child: child,
       ),
-      child: Icon(icon, color: color, size: 24),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          borderRadius: AppRadius.radiusMd,
+        ),
+        child: Icon(icon, color: color, size: 24),
+      ),
     );
   }
 

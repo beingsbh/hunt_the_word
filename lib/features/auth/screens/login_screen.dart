@@ -107,13 +107,13 @@ class LoginScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _build3DLetterTile('W', const Color(0xFF6C5CE7)),
+                  _build3DLetterTile('W', const Color(0xFF6C5CE7), delayMs: 0),
                   const SizedBox(width: 8),
-                  _build3DLetterTile('O', const Color(0xFF5138EE)),
+                  _build3DLetterTile('O', const Color(0xFF5138EE), delayMs: 80),
                   const SizedBox(width: 8),
-                  _build3DLetterTile('R', AppColors.coinGoldDark),
+                  _build3DLetterTile('R', AppColors.coinGoldDark, delayMs: 160),
                   const SizedBox(width: 8),
-                  _build3DLetterTile('D', AppColors.primaryCyan),
+                  _build3DLetterTile('D', AppColors.primaryCyan, delayMs: 240),
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -190,64 +190,67 @@ class LoginScreen extends StatelessWidget {
                     const SizedBox(height: AppSpacing.md),
 
                     // Google / Gmail Login Button
-                    Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: AppRadius.radiusPill,
-                        border: Border.all(
-                          color: Colors.grey.shade300,
-                          width: 1.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          key: const Key('google_login_button'),
+                    _PressableScaleButton(
+                      onTap: () => _handleLogin(context, 'google'),
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
                           borderRadius: AppRadius.radiusPill,
-                          onTap: () => _handleLogin(context, 'google'),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 26,
-                                height: 26,
-                                alignment: Alignment.center,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Color(0xFFEA4335),
-                                ),
-                                child: const Text(
-                                  'G',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 15,
+                          border: Border.all(
+                            color: Colors.grey.shade300,
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            key: const Key('google_login_button'),
+                            borderRadius: AppRadius.radiusPill,
+                            onTap: () => _handleLogin(context, 'google'),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 26,
+                                  height: 26,
+                                  alignment: Alignment.center,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Color(0xFFEA4335),
                                   ),
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Flexible(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    'Continue with Google',
-                                    style: AppTextStyles.buttonLarge(
-                                      color: const Color(0xFF1F1F1F),
-                                      fontSize: 14.5,
-                                      fontWeight: FontWeight.w700,
+                                  child: const Text(
+                                    'G',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 15,
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: AppSpacing.sm),
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      'Continue with Google',
+                                      style: AppTextStyles.buttonLarge(
+                                        color: const Color(0xFF1F1F1F),
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -255,48 +258,52 @@ class LoginScreen extends StatelessWidget {
                     const SizedBox(height: AppSpacing.md),
 
                     // Facebook Login Button
-                    Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1877F2),
-                        borderRadius: AppRadius.radiusPill,
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF1877F2).withValues(alpha: 0.3),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          key: const Key('facebook_login_button'),
+                    _PressableScaleButton(
+                      onTap: () => _handleLogin(context, 'facebook'),
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1877F2),
                           borderRadius: AppRadius.radiusPill,
-                          onTap: () => _handleLogin(context, 'facebook'),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.facebook_rounded,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Flexible(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    'Continue with Facebook',
-                                    style: AppTextStyles.buttonLarge(
-                                      color: Colors.white,
-                                      fontSize: 14.5,
-                                      fontWeight: FontWeight.w700,
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  const Color(0xFF1877F2).withValues(alpha: 0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            key: const Key('facebook_login_button'),
+                            borderRadius: AppRadius.radiusPill,
+                            onTap: () => _handleLogin(context, 'facebook'),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.facebook_rounded,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      'Continue with Facebook',
+                                      style: AppTextStyles.buttonLarge(
+                                        color: Colors.white,
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -350,31 +357,74 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget _build3DLetterTile(String char, Color color) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.25),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          char,
-          style: TextStyle(
-            color: color,
-            fontSize: 24,
-            fontWeight: FontWeight.w900,
+  Widget _build3DLetterTile(String char, Color color, {int delayMs = 0}) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 320 + delayMs),
+      curve: Curves.elasticOut,
+      builder: (context, scale, child) {
+        return Transform.scale(
+          scale: scale.clamp(0.0, 1.3),
+          child: child,
+        );
+      },
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: AppRadius.radiusMd,
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.25),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            char,
+            style: TextStyle(
+              color: color,
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+            ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _PressableScaleButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+
+  const _PressableScaleButton({
+    required this.child,
+    required this.onTap,
+  });
+
+  @override
+  State<_PressableScaleButton> createState() => _PressableScaleButtonState();
+}
+
+class _PressableScaleButtonState extends State<_PressableScaleButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerDown: (_) => setState(() => _isPressed = true),
+      onPointerUp: (_) => setState(() => _isPressed = false),
+      onPointerCancel: (_) => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.96 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOutQuad,
+        child: widget.child,
       ),
     );
   }

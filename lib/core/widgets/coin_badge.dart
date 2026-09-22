@@ -34,28 +34,56 @@ class CoinBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(3),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [AppColors.coinGoldLight, AppColors.coinGoldDark],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          TweenAnimationBuilder<double>(
+            key: ValueKey(coins),
+            tween: Tween<double>(begin: 1.25, end: 1.0),
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.elasticOut,
+            builder: (context, scale, child) {
+              return Transform.scale(
+                scale: scale,
+                child: child,
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [AppColors.coinGoldLight, AppColors.coinGoldDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
-            ),
-            child: Icon(
-              Icons.monetization_on_rounded,
-              size: iconSize,
-              color: Colors.white,
+              child: Icon(
+                Icons.monetization_on_rounded,
+                size: iconSize,
+                color: Colors.white,
+              ),
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
-          Text(
-            _formatCoins(coins),
-            style: AppTextStyles.buttonSmall(
-              color: AppColors.coinGoldDark,
-              fontWeight: FontWeight.w800,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.0, 0.3),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              );
+            },
+            child: Text(
+              _formatCoins(coins),
+              key: ValueKey(coins),
+              style: AppTextStyles.buttonSmall(
+                color: AppColors.coinGoldDark,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           if (showAddIcon) ...[

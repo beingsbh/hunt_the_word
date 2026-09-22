@@ -10,13 +10,50 @@ import '../../../engine/models/grid_coordinate.dart';
 import '../viewmodels/game_provider.dart';
 
 /// Interactive touch grid supporting continuous multi-directional word swiping.
-class InteractiveGameBoard extends StatelessWidget {
+class InteractiveGameBoard extends StatefulWidget {
   const InteractiveGameBoard({super.key});
+
+  @override
+  State<InteractiveGameBoard> createState() => _InteractiveGameBoardState();
+}
+
+class _InteractiveGameBoardState extends State<InteractiveGameBoard>
+    with TickerProviderStateMixin {
+  late final AnimationController _wobbleController;
+  late final AnimationController _celebrateController;
+
+  @override
+  void initState() {
+    super.initState();
+    _wobbleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _celebrateController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+  }
+
+  @override
+  void dispose() {
+    _wobbleController.dispose();
+    _celebrateController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final vm = context.watch<GameProvider>();
+
+    if (vm.isWobblingError && !_wobbleController.isAnimating) {
+      _wobbleController.forward(from: 0.0);
+    }
+    if (vm.isSuccessAnimation && !_celebrateController.isAnimating) {
+      _celebrateController.forward(from: 0.0);
+    }
+
     final matrix = vm.matrix;
     final rows = vm.rows;
     final cols = vm.cols;
@@ -49,12 +86,23 @@ class InteractiveGameBoard extends StatelessWidget {
         }
 
         return Center(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            curve: Curves.easeInOut,
-            transform: vm.isWobblingError
-                ? Matrix4.translationValues(8.0, 0.0, 0.0)
-                : Matrix4.identity(),
+          child: AnimatedBuilder(
+            animation: Listenable.merge([_wobbleController, _celebrateController]),
+            builder: (context, child) {
+              final wobble = sin(_wobbleController.value * pi * 4) *
+                  (1.0 - _wobbleController.value) *
+                  12.0;
+              final celebrationScale =
+                  1.0 + sin(_celebrateController.value * pi) * 0.025;
+
+              return Transform.translate(
+                offset: Offset(wobble, 0.0),
+                child: Transform.scale(
+                  scale: celebrationScale,
+                  child: child,
+                ),
+              );
+            },
             child: GestureDetector(
               onPanStart: (details) {
                 final coord = getCoordFromLocalOffset(details.localPosition);
