@@ -1,30 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/gradient_background.dart';
-import 'signup_screen.dart';
+import '../../profile/viewmodels/player_profile_provider.dart';
 
-/// Log In Screen matching the exact Word Hunt design mockup.
-class LoginScreen extends StatefulWidget {
+/// Streamlined Social Login Screen supporting Gmail/Google and Facebook authentication.
+class LoginScreen extends StatelessWidget {
   final VoidCallback onLoginSuccess;
 
   const LoginScreen({super.key, required this.onLoginSuccess});
 
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController(
-    text: 'wordhunter@example.com',
-  );
-  final _passwordController = TextEditingController(text: '••••••••••••');
-  bool _rememberMe = true;
-  bool _obscurePassword = true;
+  void _handleLogin(BuildContext context, String provider) {
+    final profileProvider = context.read<PlayerProfileProvider>();
+    profileProvider.initializeNewLogin(provider: provider);
+    onLoginSuccess();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Icons.arrow_back_ios_new_rounded,
                         size: 16,
                       ),
-                      onPressed: widget.onLoginSuccess,
+                      onPressed: onLoginSuccess,
                       padding: EdgeInsets.zero,
                     ),
                   ),
@@ -107,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.xl),
 
               // 3D Letter Tiles Logo: [W] [O] [R] [D]
               Row(
@@ -122,23 +116,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   _build3DLetterTile('D', AppColors.primaryCyan),
                 ],
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.lg),
 
               // Greeting & Cloud Reassurance
               Center(
                 child: Column(
                   children: [
                     Text(
-                      'Welcome Back, Hunter!',
+                      'Welcome to Word Hunt',
                       style: AppTextStyles.headlineLarge(),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Text(
-                      'Log in to sync your puzzles, coins & 7-day streak across devices.',
+                      'Sign in with your account to sync puzzles, coins & 7-day streak across devices.',
                       style: AppTextStyles.bodySmall(),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.md),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -159,12 +153,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: theme.colorScheme.primary,
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            'Cloud Save Active • Never lose your progress',
-                            style: AppTextStyles.bodySmall().copyWith(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
+                          Flexible(
+                            child: Text(
+                              'Cloud Save Active • Never lose your progress',
+                              style: AppTextStyles.bodySmall().copyWith(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.primary,
+                              ),
                             ),
                           ),
                         ],
@@ -173,243 +169,180 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.xl),
 
-              // Form Card
+              // Social Sign-In Card
               AppCard(
                 padding: AppSpacing.paddingLg,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Email or Player Tag',
+                      'CHOOSE LOGIN METHOD',
                       style: AppTextStyles.bodySmall().copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: Colors.grey.shade600,
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(
-                          Icons.mail_outline_rounded,
-                          size: 20,
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        border: OutlineInputBorder(
-                          borderRadius: AppRadius.radiusMd,
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Secret Password',
-                          style: AppTextStyles.bodySmall().copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'Forgot Password?',
-                          style: TextStyle(
-                            color: theme.colorScheme.primary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(
-                          Icons.lock_outline_rounded,
-                          size: 20,
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            size: 18,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        border: OutlineInputBorder(
-                          borderRadius: AppRadius.radiusMd,
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-
-                    // Remember Me Checkbox
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: _rememberMe,
-                          onChanged: (v) =>
-                              setState(() => _rememberMe = v ?? true),
-                          activeColor: const Color(0xFF6C5CE7),
-                        ),
-                        Text(
-                          'Remember me on this device',
-                          style: AppTextStyles.bodySmall(),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-
-                    // Primary Button: LOG IN & PLAY
-                    AppButton(
-                      text: 'LOG IN & PLAY',
-                      icon: Icons.play_arrow_rounded,
-                      onPressed: widget.onLoginSuccess,
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.md),
 
-                    // Social Divider
-                    Center(
-                      child: Text(
-                        '── OR CONTINUE WITH ──',
-                        style: AppTextStyles.bodySmall().copyWith(
-                          fontSize: 10,
-                          letterSpacing: 0.8,
+                    // Google / Gmail Login Button
+                    Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: AppRadius.radiusPill,
+                        border: Border.all(
+                          color: Colors.grey.shade300,
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          key: const Key('google_login_button'),
+                          borderRadius: AppRadius.radiusPill,
+                          onTap: () => _handleLogin(context, 'google'),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 26,
+                                height: 26,
+                                alignment: Alignment.center,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(0xFFEA4335),
+                                ),
+                                child: const Text(
+                                  'G',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    'Continue with Google',
+                                    style: AppTextStyles.buttonLarge(
+                                      color: const Color(0xFF1F1F1F),
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.md),
 
-                    // Google and Apple Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            icon: const Text(
-                              'G',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                    // Facebook Login Button
+                    Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1877F2),
+                        borderRadius: AppRadius.radiusPill,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF1877F2).withValues(alpha: 0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          key: const Key('facebook_login_button'),
+                          borderRadius: AppRadius.radiusPill,
+                          onTap: () => _handleLogin(context, 'facebook'),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.facebook_rounded,
+                                color: Colors.white,
+                                size: 24,
                               ),
-                            ),
-                            label: const Text('Google'),
-                            onPressed: widget.onLoginSuccess,
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: AppRadius.radiusMd,
+                              const SizedBox(width: AppSpacing.sm),
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    'Continue with Facebook',
+                                    style: AppTextStyles.buttonLarge(
+                                      color: Colors.white,
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.apple_rounded, size: 20),
-                            label: const Text('Apple'),
-                            onPressed: widget.onLoginSuccess,
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: AppRadius.radiusMd,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // Security reassurance text
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.verified_user_outlined,
+                          size: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'Fast & secure • No password needed',
+                              style: AppTextStyles.bodySmall().copyWith(
+                                fontSize: 11,
+                                color: Colors.grey.shade600,
                               ),
                             ),
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-
-                    // Play as Guest Button
-                    AppButton(
-                      text: 'Play as Guest (Progress saved locally)',
-                      icon: Icons.sports_esports_rounded,
-                      variant: AppButtonVariant.secondary,
-                      height: 44,
-                      onPressed: widget.onLoginSuccess,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.xl),
 
-              // Bonus Coins Promo Pill
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.coinGold.withValues(alpha: 0.15),
-                  borderRadius: AppRadius.radiusPill,
-                  border: Border.all(
-                    color: AppColors.coinGold.withValues(alpha: 0.4),
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    '🪙 +100 Bonus Coins credited upon sign in!',
-                    style: AppTextStyles.buttonSmall(
-                      color: AppColors.coinGoldDark,
-                    ).copyWith(fontSize: 11),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-
-              // Create account link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('New to Word Hunt? ', style: AppTextStyles.bodySmall()),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => SignUpScreen(
-                            onSignUpSuccess: widget.onLoginSuccess,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      'Create an Account',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xs),
+              // Terms & Privacy Footer
               Center(
                 child: Text(
                   'Terms of Service • Privacy Policy',
-                  style: AppTextStyles.bodySmall().copyWith(fontSize: 10),
+                  style: AppTextStyles.bodySmall().copyWith(
+                    fontSize: 11,
+                    color: Colors.grey.shade500,
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
             ],
           ),
         ),

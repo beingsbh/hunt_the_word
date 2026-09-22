@@ -44,6 +44,7 @@ class GameProvider extends ChangeNotifier {
   int _score = 0;
   int _elapsedSeconds = 0;
   Timer? _gameTimer;
+  bool _isDisposed = false;
 
   GameProvider({
     required this.levelNumber,
@@ -403,7 +404,15 @@ class GameProvider extends ChangeNotifier {
   }
 
   @override
+  void notifyListeners() {
+    if (!_isDisposed) {
+      super.notifyListeners();
+    }
+  }
+
+  @override
   void dispose() {
+    _isDisposed = true;
     _gameTimer?.cancel();
     _storage.cancelDebouncedSave();
     if (!isCompleted) {

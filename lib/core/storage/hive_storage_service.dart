@@ -47,7 +47,7 @@ class HiveStorageService {
       'playerTag': '#WH-9824',
       'playerTitle': 'Explorer Tier II',
       'playerLevel': 12,
-      'coins': 1250,
+      'coins': 500,
       'totalStars': 78,
       'currentLevel': 27,
       'highestUnlockedLevel': 27,
@@ -59,6 +59,8 @@ class HiveStorageService {
       'playTime': '18.5h',
       'activeThemeId': 'emerald_meadow',
       'unlockedThemes': ['emerald_meadow', 'cosmic_midnight'],
+      'hasSetUniqueUsername': false,
+      'needsUsernameSetup': false,
     };
   }
 

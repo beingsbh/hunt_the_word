@@ -22,7 +22,7 @@ class PlayerProfileProvider extends ChangeNotifier {
   String get playerTitle =>
       _profile['playerTitle'] as String? ?? 'Explorer Tier II';
   int get playerLevel => (_profile['playerLevel'] as num?)?.toInt() ?? 12;
-  int get coins => (_profile['coins'] as num?)?.toInt() ?? 1250;
+  int get coins => (_profile['coins'] as num?)?.toInt() ?? 500;
   int get totalStars => (_profile['totalStars'] as num?)?.toInt() ?? 78;
   int get currentLevel => (_profile['currentLevel'] as num?)?.toInt() ?? 27;
   int get highestUnlockedLevel =>
@@ -34,6 +34,10 @@ class PlayerProfileProvider extends ChangeNotifier {
       (_profile['accuracyRate'] as num?)?.toDouble() ?? 94.2;
   int get bestScore => (_profile['bestScore'] as num?)?.toInt() ?? 4820;
   String get playTime => _profile['playTime'] as String? ?? '18.5h';
+  bool get hasSetUniqueUsername =>
+      _profile['hasSetUniqueUsername'] as bool? ?? false;
+  bool get needsUsernameSetup =>
+      _profile['needsUsernameSetup'] as bool? ?? false;
 
   void updateCoins(int delta) {
     final newCoins = (coins + delta).clamp(0, 999999);
@@ -52,6 +56,32 @@ class PlayerProfileProvider extends ChangeNotifier {
     _profile['nickname'] = name;
     _storage.savePlayerProfile(_profile);
     notifyListeners();
+  }
+
+  void setUniqueUsername(String name, {String? tag}) {
+    _profile['nickname'] = name;
+    if (tag != null) {
+      _profile['playerTag'] = tag;
+    }
+    _profile['hasSetUniqueUsername'] = true;
+    _profile['needsUsernameSetup'] = false;
+    _storage.savePlayerProfile(_profile);
+    notifyListeners();
+  }
+
+  void flagNeedsUsernameSetup() {
+    _profile['needsUsernameSetup'] = true;
+    _storage.savePlayerProfile(_profile);
+    notifyListeners();
+  }
+
+  void initializeNewLogin({required String provider}) {
+    if (!hasSetUniqueUsername) {
+      _profile['coins'] = 500;
+      _profile['needsUsernameSetup'] = true;
+      _storage.savePlayerProfile(_profile);
+      notifyListeners();
+    }
   }
 
   void refreshFromStorage() {

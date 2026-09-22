@@ -148,11 +148,13 @@ class _AppButtonState extends State<AppButton>
             const SizedBox(width: AppSpacing.xs),
           ],
           Flexible(
-            child: Text(
-              widget.text,
-              style: textStyle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                widget.text,
+                style: textStyle,
+                maxLines: 1,
+              ),
             ),
           ),
         ],

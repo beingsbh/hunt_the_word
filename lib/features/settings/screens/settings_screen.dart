@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/main_navigation_shell.dart';
 import '../../../core/audio/audio_haptic_service.dart';
 import '../../../core/storage/hive_storage_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_bar.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/gradient_background.dart';
+import '../../auth/screens/login_screen.dart';
 import '../../themes/screens/themes_screen.dart';
 
 /// Settings Screen for sound, haptics, cloud save, and reset options.
@@ -75,6 +78,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
             child: const Text(
               'RESET',
+              style: TextStyle(
+                color: AppColors.error,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutConfirmDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Log Out?'),
+        content: const Text(
+          'Are you sure you want to log out? Your game progress remains saved on this device.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('CANCEL'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              final messenger = ScaffoldMessenger.of(context);
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (loginContext) => LoginScreen(
+                    onLoginSuccess: () {
+                      Navigator.of(loginContext).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (_) => const MainNavigationShell(),
+                        ),
+                        (route) => false,
+                      );
+                    },
+                  ),
+                ),
+                (route) => false,
+              );
+              messenger.showSnackBar(
+                const SnackBar(content: Text('Logged out successfully')),
+              );
+            },
+            child: const Text(
+              'LOG OUT',
               style: TextStyle(
                 color: AppColors.error,
                 fontWeight: FontWeight.bold,
@@ -217,8 +269,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: const Text(
                   'Wipe local solve data and restart from Level 1',
                 ),
+                trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: _showResetConfirmDialog,
               ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
+              key: const Key('logout_button'),
+              text: 'LOG OUT',
+              icon: Icons.logout_rounded,
+              variant: AppButtonVariant.outline,
+              customColor: AppColors.error,
+              textColor: AppColors.error,
+              onPressed: _showLogoutConfirmDialog,
             ),
             const SizedBox(height: AppSpacing.xl),
 
