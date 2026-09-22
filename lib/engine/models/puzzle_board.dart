@@ -33,11 +33,11 @@ class PuzzleBoard {
   }
 
   Map<String, dynamic> toMap() => {
-        'rows': rows,
-        'cols': cols,
-        'matrix': matrix,
-        'placements': placements.map((p) => p.toMap()).toList(),
-      };
+    'rows': rows,
+    'cols': cols,
+    'matrix': matrix,
+    'placements': placements.map((p) => p.toMap()).toList(),
+  };
 
   factory PuzzleBoard.fromMap(Map<dynamic, dynamic> map) {
     final rawMatrix = map['matrix'] as List;

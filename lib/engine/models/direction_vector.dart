@@ -21,6 +21,38 @@ enum DirectionVector {
   bool get isDiagonal => dRow.abs() == 1 && dCol.abs() == 1;
   bool get isReverse => dRow < 0 || (dRow == 0 && dCol < 0);
 
+  /// Helper groupings for level constraints and testing
+  static const List<DirectionVector> horizontalDirections = [
+    horizontalRight,
+    horizontalLeft,
+  ];
+
+  static const List<DirectionVector> verticalDirections = [
+    verticalDown,
+    verticalUp,
+  ];
+
+  static const List<DirectionVector> diagonalDirections = [
+    diagonalDownRight,
+    diagonalDownLeft,
+    diagonalUpRight,
+    diagonalUpLeft,
+  ];
+
+  static const List<DirectionVector> reverseDirections = [
+    horizontalLeft,
+    verticalUp,
+    diagonalDownLeft,
+    diagonalUpRight,
+    diagonalUpLeft,
+  ];
+
+  static const List<DirectionVector> standardDirections = [
+    horizontalRight,
+    verticalDown,
+    diagonalDownRight,
+  ];
+
   /// Computes the straight ray of coordinates from start to end if they align with this vector.
   static List<GridCoordinate>? getRayBetween(
     GridCoordinate start,
@@ -45,7 +77,9 @@ enum DirectionVector {
     final ray = <GridCoordinate>[];
 
     for (int i = 0; i < length; i++) {
-      ray.add(GridCoordinate(start.row + (i * stepRow), start.col + (i * stepCol)));
+      ray.add(
+        GridCoordinate(start.row + (i * stepRow), start.col + (i * stepCol)),
+      );
     }
 
     return ray;

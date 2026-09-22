@@ -21,10 +21,7 @@ class WordPlacement {
   GridCoordinate get end => coordinates.last;
   int get length => coordinates.length;
 
-  WordPlacement copyWith({
-    bool? isFound,
-    int? colorIndex,
-  }) {
+  WordPlacement copyWith({bool? isFound, int? colorIndex}) {
     return WordPlacement(
       word: word,
       coordinates: coordinates,
@@ -35,12 +32,12 @@ class WordPlacement {
   }
 
   Map<String, dynamic> toMap() => {
-        'word': word,
-        'coordinates': coordinates.map((c) => c.toMap()).toList(),
-        'direction': direction.name,
-        'isFound': isFound,
-        'colorIndex': colorIndex,
-      };
+    'word': word,
+    'coordinates': coordinates.map((c) => c.toMap()).toList(),
+    'direction': direction.name,
+    'isFound': isFound,
+    'colorIndex': colorIndex,
+  };
 
   factory WordPlacement.fromMap(Map<dynamic, dynamic> map) {
     return WordPlacement(

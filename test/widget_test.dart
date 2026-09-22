@@ -1,30 +1,77 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:material_ui/material_ui.dart';
-
-import 'package:hunt_the_word/main.dart';
+import 'package:hunt_the_word/app/app.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Word Hunt full app navigation and gameplay smoke test', (
+    WidgetTester tester,
+  ) async {
+    // Set a phone-like viewport size
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+    addTearDown(tester.view.resetPhysicalSize);
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Build Word Hunt app
+    await tester.pumpWidget(const WordHuntApp());
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Verify Home Screen renders title and primary elements
+    expect(find.text('Good evening, Subha 👋'), findsOneWidget);
+    expect(find.text('CONTINUE PUZZLE'), findsOneWidget);
+    expect(find.text('Level 27'), findsOneWidget);
+    expect(find.text('Autumn Breeze'), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify 5 bottom navigation items exist
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Levels'), findsOneWidget);
+    expect(find.text('Daily'), findsOneWidget);
+    expect(find.text('Badges'), findsOneWidget);
+    expect(find.text('Profile'), findsOneWidget);
+
+    // 1. Test Levels Tab
+    await tester.tap(find.text('Levels'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('WORLD 2: OCEAN SANCTUARY (Levels 21–40)'),
+      findsOneWidget,
+    );
+    expect(find.text('Coral Trench'), findsOneWidget);
+    expect(find.text('PLAY NOW'), findsOneWidget);
+
+    // 2. Test Daily Tab
+    await tester.tap(find.text('Daily'));
+    await tester.pumpAndSettle();
+    expect(find.text('Daily Challenge'), findsOneWidget);
+    expect(find.text('Autumn Breeze 🍁'), findsOneWidget);
+    expect(find.text('START CHALLENGE'), findsOneWidget);
+
+    // 3. Test Badges Tab
+    await tester.tap(find.text('Badges'));
+    await tester.pumpAndSettle();
+    expect(find.text('18 of 36 Badges'), findsOneWidget);
+    expect(find.text('FIRST WORD'), findsOneWidget);
+    expect(find.text('WORD STREAK'), findsOneWidget);
+
+    // 4. Test Profile Tab
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+    expect(find.text('Subha WordMaster'), findsOneWidget);
+    expect(find.text('Levels Solved'), findsOneWidget);
+    expect(find.text('Words Found'), findsOneWidget);
+
+    // 5. Return to Home and enter Game Screen
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('CONTINUE PLAYING'));
+    await tester.pumpAndSettle();
+
+    // Verify Gameplay Screen
+    expect(find.text('FIND WORDS'), findsOneWidget);
+    expect(find.text('Hint 20🪙'), findsOneWidget);
+
+    // 6. Return back to Home screen
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
+    await tester.pumpAndSettle();
+    expect(find.text('Good evening, Subha 👋'), findsOneWidget);
   });
 }

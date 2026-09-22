@@ -28,6 +28,35 @@ class LevelConfiguration {
     this.coinReward = 25,
   });
 
+  /// Factory constructor for custom level configurations with sensible defaults.
+  factory LevelConfiguration.custom({
+    int levelNumber = 1,
+    String category = 'Custom',
+    required int gridRows,
+    required int gridCols,
+    int? wordCount,
+    int minWordLength = 2,
+    int maxWordLength = 20,
+    List<DirectionVector>? allowedDirections,
+    bool allowOverlaps = true,
+    int timeLimitSeconds = 0,
+    int coinReward = 25,
+  }) {
+    return LevelConfiguration(
+      levelNumber: levelNumber,
+      category: category,
+      gridRows: gridRows,
+      gridCols: gridCols,
+      wordCount: wordCount ?? 5,
+      minWordLength: minWordLength,
+      maxWordLength: maxWordLength,
+      allowedDirections: allowedDirections ?? DirectionVector.values,
+      allowOverlaps: allowOverlaps,
+      timeLimitSeconds: timeLimitSeconds,
+      coinReward: coinReward,
+    );
+  }
+
   /// Factory method generating progressive level difficulty based on level number.
   factory LevelConfiguration.forLevel(int level) {
     // Categories cycle across worlds
