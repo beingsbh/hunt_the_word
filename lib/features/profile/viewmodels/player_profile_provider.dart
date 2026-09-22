@@ -39,6 +39,14 @@ class PlayerProfileProvider extends ChangeNotifier {
   bool get needsUsernameSetup =>
       _profile['needsUsernameSetup'] as bool? ?? false;
 
+  bool get isCloudSaveEnabled => _profile['cloudSaveEnabled'] as bool? ?? true;
+
+  void toggleCloudSave(bool enabled) {
+    _profile['cloudSaveEnabled'] = enabled;
+    _storage.savePlayerProfile(_profile);
+    notifyListeners();
+  }
+
   void updateCoins(int delta) {
     final newCoins = (coins + delta).clamp(0, 999999);
     _profile['coins'] = newCoins;
@@ -48,6 +56,19 @@ class PlayerProfileProvider extends ChangeNotifier {
 
   void incrementWordsFound(int count) {
     _profile['wordsFound'] = wordsFound + count;
+    _storage.savePlayerProfile(_profile);
+    notifyListeners();
+  }
+
+  void advanceLevel(int newLevel) {
+    if (newLevel > currentLevel) {
+      _profile['currentLevel'] = newLevel;
+    }
+    if (newLevel > highestUnlockedLevel) {
+      _profile['highestUnlockedLevel'] = newLevel;
+    }
+    _profile['playerLevel'] = _profile['currentLevel'];
+    _profile['puzzlesSolved'] = puzzlesSolved + 1;
     _storage.savePlayerProfile(_profile);
     notifyListeners();
   }

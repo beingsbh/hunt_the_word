@@ -20,8 +20,7 @@ class GradientBackground extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final effectiveColors =
-        colors ??
+    final effectiveColors = colors ??
         (isDark
             ? [
                 theme.scaffoldBackgroundColor,

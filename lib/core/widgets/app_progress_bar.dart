@@ -41,8 +41,7 @@ class AppProgressBar extends StatelessWidget {
     Widget bar = Container(
       height: height,
       decoration: BoxDecoration(
-        color:
-            backgroundColor ??
+        color: backgroundColor ??
             theme.colorScheme.onSurface.withValues(alpha: 0.08),
         borderRadius: radius,
       ),

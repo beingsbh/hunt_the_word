@@ -52,8 +52,7 @@ class AppCard extends StatelessWidget {
         color: gradient == null ? (color ?? theme.cardColor) : null,
         gradient: gradient,
         borderRadius: effectiveRadius,
-        border:
-            border ??
+        border: border ??
             Border.all(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
               width: 1.0,

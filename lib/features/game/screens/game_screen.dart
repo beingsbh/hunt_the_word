@@ -4,11 +4,13 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/animated_coin_icon.dart';
 import '../../../core/widgets/app_bar.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/coin_badge.dart';
 import '../../../core/widgets/gradient_background.dart';
 import '../../completion/screens/level_complete_dialog.dart';
+import '../../daily/viewmodels/daily_challenge_provider.dart';
 import '../../levels/viewmodels/level_progress_provider.dart';
 import '../../profile/viewmodels/player_profile_provider.dart';
 import '../../settings/screens/settings_screen.dart';
@@ -50,80 +52,217 @@ class _GameScreenContent extends StatefulWidget {
 }
 
 class _GameScreenContentState extends State<_GameScreenContent> {
-  bool _victoryDialogShown = false;
+  GameProvider? _gameProvider;
+  bool _dialogShown = false;
 
-  void _checkVictory(GameProvider vm) {
-    if (vm.isLevelCompleted && !_victoryDialogShown) {
-      _victoryDialogShown = true;
-      final earnedStars = vm.elapsedSeconds < 180
-          ? 3
-          : (vm.elapsedSeconds < 300 ? 2 : 1);
-      final earnedScore = 500 + (vm.totalWords * 50);
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final provider = Provider.of<GameProvider>(context);
+    if (_gameProvider != provider) {
+      _gameProvider?.removeListener(_onGameStateChanged);
+      _gameProvider = provider;
+      _gameProvider?.addListener(_onGameStateChanged);
+    }
+  }
 
-      // Persist level completion, score, and coins
-      context.read<LevelProgressProvider>().completeLevel(
-        vm.levelNumber,
-        earnedStars,
-        earnedScore,
-      );
-      context.read<PlayerProfileProvider>().updateCoins(25);
-      context.read<PlayerProfileProvider>().incrementWordsFound(
-        vm.totalWords,
-      );
+  @override
+  void dispose() {
+    _gameProvider?.removeListener(_onGameStateChanged);
+    super.dispose();
+  }
 
+  void _onGameStateChanged() {
+    if (!mounted || _dialogShown) return;
+    final vm = _gameProvider;
+    if (vm == null) return;
+
+    if (vm.isCompleted) {
+      _dialogShown = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (dialogCtx) => LevelCompleteDialog(
-            levelNumber: vm.levelNumber,
-            stars: earnedStars,
-            score: earnedScore,
-            time: vm.formattedTime,
-            coinsEarned: 25,
-            onPreviousLevel: vm.levelNumber > 1
-                ? () {
-                    Navigator.of(dialogCtx).pop();
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (_) => GameScreen(
-                          levelNumber: vm.levelNumber - 1,
-                          category: vm.category,
-                        ),
-                      ),
-                    );
-                  }
-                : null,
-            onNextLevel: () {
-              Navigator.of(dialogCtx).pop();
-              // Navigate to next level
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (_) => GameScreen(
-                    levelNumber: vm.levelNumber + 1,
-                    category: vm.category,
-                  ),
+        if (mounted) _handleVictory(vm);
+      });
+    } else if (vm.isFailed) {
+      _dialogShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _handleTimeout(vm);
+      });
+    }
+  }
+
+  void _handleVictory(GameProvider vm) {
+    final earnedStars =
+        vm.elapsedSeconds < 180 ? 3 : (vm.elapsedSeconds < 300 ? 2 : 1);
+    final earnedScore = 500 + (vm.totalWords * 50);
+
+    // Challenge rewards: 3★ = 3x (60🪙), 2★ = 2x (40🪙), 1★ = 0 coins
+    final int coinsToAward;
+    if (vm.isDaily) {
+      if (earnedStars == 3) {
+        coinsToAward = 60;
+      } else if (earnedStars == 2) {
+        coinsToAward = 40;
+      } else {
+        coinsToAward = 0;
+      }
+    } else {
+      coinsToAward = 25;
+    }
+
+    // Persist level completion, score, and coins
+    if (vm.isDaily) {
+      context.read<DailyChallengeProvider>().completeToday();
+      if (coinsToAward > 0) {
+        context.read<PlayerProfileProvider>().updateCoins(coinsToAward);
+      }
+    } else {
+      context.read<LevelProgressProvider>().completeLevel(
+            vm.levelNumber,
+            earnedStars,
+            earnedScore,
+          );
+      context.read<PlayerProfileProvider>().advanceLevel(vm.levelNumber + 1);
+      context.read<PlayerProfileProvider>().updateCoins(coinsToAward);
+    }
+    context.read<PlayerProfileProvider>().incrementWordsFound(
+          vm.totalWords,
+        );
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => LevelCompleteDialog(
+        levelNumber: vm.levelNumber,
+        stars: earnedStars,
+        score: earnedScore,
+        time: vm.formattedTime,
+        coinsEarned: coinsToAward,
+        isDaily: vm.isDaily,
+        onPreviousLevel: () {
+          if (vm.levelNumber > 1 && !vm.isDaily) {
+            Navigator.of(dialogCtx).pop();
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => GameScreen(
+                  levelNumber: vm.levelNumber - 1,
+                  category: vm.category,
                 ),
-              );
+              ),
+            );
+          }
+        },
+        onNextLevel: () {
+          Navigator.of(dialogCtx).pop();
+          if (vm.isDaily) {
+            Navigator.of(context).pop();
+          } else {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => GameScreen(
+                  levelNumber: vm.levelNumber + 1,
+                  category: vm.category,
+                ),
+              ),
+            );
+          }
+        },
+        onReplay: () {
+          Navigator.of(dialogCtx).pop();
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => GameScreen(
+                levelNumber: vm.levelNumber,
+                category: vm.category,
+                isDaily: vm.isDaily,
+              ),
+            ),
+          );
+        },
+        onHome: () {
+          Navigator.of(dialogCtx).pop();
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
+  void _handleTimeout(GameProvider vm) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
+        title: const Row(
+          children: [
+            Icon(Icons.timer_off_rounded, color: AppColors.error),
+            SizedBox(width: 8),
+            Text("TIME'S UP!"),
+          ],
+        ),
+        content: const Text(
+          "You ran out of time to solve today's challenge. Would you like to try again?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogCtx).pop();
+              Navigator.of(context).pop();
             },
-            onReplay: () {
+            child: const Text('EXIT'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
               Navigator.of(dialogCtx).pop();
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (_) => GameScreen(
                     levelNumber: vm.levelNumber,
                     category: vm.category,
+                    isDaily: vm.isDaily,
                   ),
                 ),
               );
             },
-            onHome: () {
-              Navigator.of(dialogCtx).pop();
-              Navigator.of(context).pop();
-            },
+            child: const Text('RETRY'),
           ),
-        );
-      });
+        ],
+      ),
+    );
+  }
+
+  void _onUseHint(
+    BuildContext context,
+    GameProvider vm,
+    PlayerProfileProvider profile,
+  ) {
+    if (profile.coins < 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Not enough coins for a hint! (Requires 5 coins)'),
+        ),
+      );
+      return;
+    }
+    final success = vm.useLetterHint();
+    if (success) {
+      profile.updateCoins(-5);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Letter hint revealed! (-5 coins)'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('All remaining letters already hinted!'),
+          duration: Duration(seconds: 1),
+        ),
+      );
     }
   }
 
@@ -133,15 +272,15 @@ class _GameScreenContentState extends State<_GameScreenContent> {
     final vm = context.watch<GameProvider>();
     final profile = context.watch<PlayerProfileProvider>();
 
-    _checkVictory(vm);
-
     final remainingWords = vm.placements.where((p) => !p.isFound).length;
 
     return Scaffold(
       appBar: AppCustomBar(
-        title: 'LEVEL ${vm.levelNumber} - ${vm.category}',
+        title: vm.isDaily
+            ? 'DAILY: ${vm.category.toUpperCase()}'
+            : 'LEVEL ${vm.levelNumber} - ${vm.category}',
         actions: [
-          if (vm.levelNumber > 1)
+          if (vm.levelNumber > 1 && !vm.isDaily)
             IconButton(
               icon: Icon(
                 Icons.skip_previous_rounded,
@@ -369,9 +508,8 @@ class _GameScreenContentState extends State<_GameScreenContent> {
                       const SizedBox(width: AppSpacing.xs),
                   itemBuilder: (context, index) {
                     final p = vm.placements[index];
-                    final color =
-                        AppColors.wordHighlights[p.colorIndex %
-                            AppColors.wordHighlights.length];
+                    final color = AppColors.wordHighlights[
+                        p.colorIndex % AppColors.wordHighlights.length];
                     return Center(
                       child: TargetWordChip(
                         word: p.word,
@@ -407,26 +545,7 @@ class _GameScreenContentState extends State<_GameScreenContent> {
                     // Primary Hint Button
                     Expanded(
                       child: _InteractiveScaleWrapper(
-                        onTap: () {
-                          final success = vm.useLetterHint();
-                          if (success) {
-                            profile.updateCoins(-20);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Letter hint revealed! (-20 coins)',
-                                ),
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Not enough coins for a hint!'),
-                              ),
-                            );
-                          }
-                        },
+                        onTap: () => _onUseHint(context, vm, profile),
                         child: Container(
                           height: 50,
                           decoration: BoxDecoration(
@@ -456,15 +575,17 @@ class _GameScreenContentState extends State<_GameScreenContent> {
                                 const Icon(
                                   Icons.lightbulb_rounded,
                                   color: Colors.white,
-                                  size: 22,
+                                  size: 20,
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 6),
                                 Text(
-                                  'Hint 20🪙',
+                                  'Hint 5',
                                   style: AppTextStyles.buttonLarge(
                                     color: Colors.white,
                                   ),
                                 ),
+                                const SizedBox(width: 5),
+                                const AnimatedCoinIcon(size: 19),
                               ],
                             ),
                           ),
@@ -476,9 +597,7 @@ class _GameScreenContentState extends State<_GameScreenContent> {
                     // Search / Spy Tool Button
                     _buildRoundToolButton(
                       icon: Icons.search_rounded,
-                      onTap: () {
-                        vm.useLetterHint();
-                      },
+                      onTap: () => _onUseHint(context, vm, profile),
                     ),
                   ],
                 ),

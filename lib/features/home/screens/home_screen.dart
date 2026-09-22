@@ -14,6 +14,7 @@ import '../../../core/widgets/gradient_background.dart';
 import '../../game/screens/game_screen.dart';
 import '../../profile/viewmodels/player_profile_provider.dart';
 import '../../settings/screens/settings_screen.dart';
+import '../../store/screens/coin_store_screen.dart';
 
 /// Home Dashboard matching the exact Word Hunt design mockups.
 class HomeScreen extends StatefulWidget {
@@ -197,9 +198,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         coins: profile.coins,
                         showAddIcon: true,
                         onTap: () {
-                          profile.updateCoins(100);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('+100 Coins added!')),
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const CoinStoreScreen(),
+                            ),
                           );
                         },
                       ),
@@ -650,7 +652,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: 100),
             ],
           ),
         ),

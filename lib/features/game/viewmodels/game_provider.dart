@@ -19,6 +19,7 @@ enum GameStatus {
   playing,
   paused,
   completed,
+  failed,
 }
 
 /// Provider managing the gameplay lifecycle, board state, score, timer, hints,
@@ -43,6 +44,7 @@ class GameProvider extends ChangeNotifier {
 
   int _score = 0;
   int _elapsedSeconds = 0;
+  int _timeLimitSeconds = 0;
   Timer? _gameTimer;
   bool _isDisposed = false;
 
@@ -99,8 +101,7 @@ class GameProvider extends ChangeNotifier {
       totalWords == 0 ? 0.0 : foundWordsCount / totalWords;
 
   /// Currently selected coordinates during user drag.
-  List<GridCoordinate> get selectedCells =>
-      List.unmodifiable(_selectedCells);
+  List<GridCoordinate> get selectedCells => List.unmodifiable(_selectedCells);
 
   /// Backwards-compatible alias for [selectedCells].
   List<GridCoordinate> get selectedCoordinates => selectedCells;
@@ -111,12 +112,30 @@ class GameProvider extends ChangeNotifier {
   /// Seconds elapsed since level started.
   int get elapsedSeconds => _elapsedSeconds;
 
-  /// Formatted elapsed time in MM:SS format.
+  /// Formatted elapsed or countdown time in MM:SS format.
   String get formattedTime {
+    if (_timeLimitSeconds > 0) {
+      final remaining =
+          (_timeLimitSeconds - _elapsedSeconds).clamp(0, _timeLimitSeconds);
+      final m = (remaining ~/ 60).toString().padLeft(2, '0');
+      final s = (remaining % 60).toString().padLeft(2, '0');
+      return '$m:$s';
+    }
     final m = (_elapsedSeconds ~/ 60).toString().padLeft(2, '0');
     final s = (_elapsedSeconds % 60).toString().padLeft(2, '0');
     return '$m:$s';
   }
+
+  /// Total time limit in seconds (0 for untimed).
+  int get timeLimitSeconds => _timeLimitSeconds;
+
+  /// Whether this puzzle is timed.
+  bool get isTimed => _timeLimitSeconds > 0;
+
+  /// Seconds remaining if timed.
+  int get remainingSeconds => _timeLimitSeconds > 0
+      ? (_timeLimitSeconds - _elapsedSeconds).clamp(0, _timeLimitSeconds)
+      : 0;
 
   /// Coordinate highlighted by the hint system, if active.
   GridCoordinate? get highlightedHintCoordinate => _highlightedHintCoordinate;
@@ -129,6 +148,9 @@ class GameProvider extends ChangeNotifier {
 
   /// Backwards-compatible alias for [isCompleted].
   bool get isLevelCompleted => isCompleted;
+
+  /// Whether the game ended in failure/timeout.
+  bool get isFailed => _status == GameStatus.failed;
 
   /// Whether the invalid-selection wobble animation is currently triggered.
   bool get isWobblingError => _isWobblingError;
@@ -148,6 +170,7 @@ class GameProvider extends ChangeNotifier {
     List<String>? customWords,
   }) {
     if (customConfig != null) {
+      _timeLimitSeconds = customConfig.timeLimitSeconds;
       _board = GridGenerator.generate(
         customConfig,
         words: customWords,
@@ -169,16 +192,22 @@ class GameProvider extends ChangeNotifier {
       _elapsedSeconds = (saved['elapsedSeconds'] as num?)?.toInt() ?? 0;
       _score = (saved['score'] as num?)?.toInt() ?? 0;
       _status = _board.isComplete ? GameStatus.completed : GameStatus.playing;
+      if (isDaily) {
+        _timeLimitSeconds = 180;
+      }
     } else {
       // Generate new board via the engine
+      final now = DateTime.now();
+      final dateSeed = now.year * 10000 + now.month * 100 + now.day;
       final config = isDaily
-          ? LevelConfiguration.daily(seed: 20240921, themeTitle: category)
+          ? LevelConfiguration.daily(seed: dateSeed, themeTitle: category)
           : LevelConfiguration.forLevel(levelNumber);
+      _timeLimitSeconds = config.timeLimitSeconds;
 
       _board = GridGenerator.generate(
         config,
         words: customWords,
-        seed: levelNumber * 100,
+        seed: isDaily ? dateSeed : levelNumber * 100,
       );
       _elapsedSeconds = 0;
       _score = 0;
@@ -195,9 +224,20 @@ class GameProvider extends ChangeNotifier {
     _gameTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_status == GameStatus.playing) {
         _elapsedSeconds++;
-        notifyListeners();
+        if (_timeLimitSeconds > 0 && _elapsedSeconds >= _timeLimitSeconds) {
+          _handleTimeExpired();
+        } else {
+          notifyListeners();
+        }
       }
     });
+  }
+
+  void _handleTimeExpired() {
+    _status = GameStatus.failed;
+    _gameTimer?.cancel();
+    _audio.playInvalidWord();
+    notifyListeners();
   }
 
   void pauseGame() {
@@ -353,9 +393,7 @@ class GameProvider extends ChangeNotifier {
     final bonusScore = 500 + (_board.totalWords * 50) + (stars * 100);
     _score += bonusScore;
 
-    // Save completion record in Hive storage
-    _storage.saveLevelProgress(levelNumber, stars, _score);
-    _storage.updateCoins(25);
+    // Clear active saved state so it is not resumed
     _storage.clearActiveGame();
 
     notifyListeners();
@@ -365,17 +403,10 @@ class GameProvider extends ChangeNotifier {
   // Hints & Utilities
   // -------------------------------------------------------------
 
-  /// Consumes coins to reveal a letter hint from [HintSolver].
+  /// Reveals a letter hint from [HintSolver] if an unfound word exists.
   bool useLetterHint() {
-    final profile = _storage.getPlayerProfile();
-    final coins = (profile['coins'] as num?)?.toInt() ?? 0;
-    const cost = 20;
-
-    if (coins < cost) return false;
-
     final hint = HintSolver.getLetterHint(_board);
     if (hint != null) {
-      _storage.updateCoins(-cost);
       _highlightedHintCoordinate = hint.highlightedCoordinate;
       _audio.playDragTick();
       notifyListeners();

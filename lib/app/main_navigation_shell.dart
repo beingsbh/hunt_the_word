@@ -34,13 +34,18 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           Navigator.of(context)
               .push(MaterialPageRoute(builder: (_) => const ThemesScreen()));
         },
-        onOpenAchievements: () => _onTabSelected(3),
-        onOpenProfile: () => _onTabSelected(4),
+        onOpenAchievements: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AchievementsScreen()),
+          );
+        },
+        onOpenProfile: () => _onTabSelected(3),
       ),
       const LevelMapScreen(),
       const DailyChallengeScreen(),
-      const AchievementsScreen(),
-      const ProfileScreen(),
+      ProfileScreen(
+        onOpenJourney: () => _onTabSelected(1),
+      ),
     ];
 
     final navItems = const [
@@ -58,11 +63,6 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         icon: Icons.calendar_today_outlined,
         activeIcon: Icons.calendar_today_rounded,
         label: 'Daily',
-      ),
-      BottomNavItem(
-        icon: Icons.military_tech_outlined,
-        activeIcon: Icons.military_tech_rounded,
-        label: 'Badges',
       ),
       BottomNavItem(
         icon: Icons.person_outline_rounded,

@@ -31,6 +31,22 @@ class LevelProgressProvider extends ChangeNotifier {
   int _currentWorld = 2; // World 2: Ocean Sanctuary (Active)
   int _activeLevel = 27; // Level 27 Coral Trench (Active in mockups)
 
+  LevelProgressProvider() {
+    _loadFromStorage();
+  }
+
+  void _loadFromStorage() {
+    final profile = _storage.getPlayerProfile();
+    final highest = (profile['highestUnlockedLevel'] as num?)?.toInt() ?? 27;
+    _activeLevel = highest;
+    _currentWorld = ((_activeLevel - 1) ~/ 20) + 1;
+  }
+
+  void resetProgress() {
+    _loadFromStorage();
+    notifyListeners();
+  }
+
   int get currentWorld => _currentWorld;
   int get activeLevel => _activeLevel;
 
@@ -77,8 +93,8 @@ class LevelProgressProvider extends ChangeNotifier {
         isCompleted: false,
         isUnlocked: true,
         isCurrent: true,
-        title: 'Coral Trench',
-        description: 'Find 10 hidden sea words before time expires',
+        title: _getLevelTitle(levelNumber),
+        description: 'Find all hidden words before time expires',
       );
     } else {
       return LevelNodeState(
@@ -98,6 +114,14 @@ class LevelProgressProvider extends ChangeNotifier {
     _storage.saveLevelProgress(levelNumber, stars, score);
     if (levelNumber >= _activeLevel) {
       _activeLevel = levelNumber + 1;
+      _currentWorld = ((_activeLevel - 1) ~/ 20) + 1;
+      final profile = _storage.getPlayerProfile();
+      profile['highestUnlockedLevel'] = _activeLevel;
+      profile['currentLevel'] = _activeLevel;
+      profile['playerLevel'] = _activeLevel;
+      profile['puzzlesSolved'] =
+          ((profile['puzzlesSolved'] as num?)?.toInt() ?? 0) + 1;
+      _storage.savePlayerProfile(profile);
     }
     notifyListeners();
   }

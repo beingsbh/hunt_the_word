@@ -35,23 +35,6 @@ class GridGenerator {
       throw const WordPlacementException('Grid dimensions must be positive');
     }
 
-    // Handle explicit empty word list
-    if (words != null && words.isEmpty) {
-      final emptyMatrix = List.generate(
-        rows,
-        (_) => List.generate(
-          cols,
-          (_) => _letterPool[random.nextInt(_letterPool.length)],
-        ),
-      );
-      return PuzzleBoard(
-        rows: rows,
-        cols: cols,
-        matrix: emptyMatrix,
-        placements: const [],
-      );
-    }
-
     // Prepare and sanitize target words
     List<String> targetWords;
     if (words != null) {
@@ -63,6 +46,23 @@ class GridGenerator {
         if (clean.isNotEmpty && seen.add(clean)) {
           targetWords.add(clean);
         }
+      }
+
+      // Handle explicit empty or whitespace-only word list
+      if (targetWords.isEmpty) {
+        final emptyMatrix = List.generate(
+          rows,
+          (_) => List.generate(
+            cols,
+            (_) => _letterPool[random.nextInt(_letterPool.length)],
+          ),
+        );
+        return PuzzleBoard(
+          rows: rows,
+          cols: cols,
+          matrix: emptyMatrix,
+          placements: const [],
+        );
       }
     } else {
       targetWords = _selectVocabularyWords(config, random);
@@ -272,7 +272,8 @@ class GridGenerator {
 
     // Sort to prioritize positions with higher overlapping intersections if overlaps are allowed
     if (allowOverlaps) {
-      candidatePositions.sort((a, b) => b.overlapScore.compareTo(a.overlapScore));
+      candidatePositions
+          .sort((a, b) => b.overlapScore.compareTo(a.overlapScore));
     }
 
     // Choose from top candidates randomly to keep variety
