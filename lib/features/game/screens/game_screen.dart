@@ -323,7 +323,7 @@ class _GameScreenContentState extends State<_GameScreenContent> {
                   ),
                   scrollDirection: Axis.horizontal,
                   itemCount: vm.placements.length,
-                  separatorBuilder: (_, _) =>
+                  separatorBuilder: (_, __) =>
                       const SizedBox(width: AppSpacing.xs),
                   itemBuilder: (context, index) {
                     final p = vm.placements[index];
