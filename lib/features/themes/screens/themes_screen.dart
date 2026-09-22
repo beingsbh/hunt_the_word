@@ -150,34 +150,44 @@ class ThemesScreen extends StatelessWidget {
                             ],
                           ),
                           if (isEquipped)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
+                            TweenAnimationBuilder<double>(
+                              tween: Tween<double>(begin: 0.6, end: 1.0),
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.elasticOut,
+                              builder: (context, scale, child) =>
+                                  Transform.scale(
+                                scale: scale,
+                                child: child,
                               ),
-                              decoration: BoxDecoration(
-                                color: AppColors.success.withValues(
-                                  alpha: 0.15,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
                                 ),
-                                borderRadius: AppRadius.radiusPill,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.check_circle_rounded,
-                                    size: 14,
-                                    color: AppColors.success,
+                                decoration: BoxDecoration(
+                                  color: AppColors.success.withValues(
+                                    alpha: 0.15,
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'EQUIPPED',
-                                    style: AppTextStyles.buttonSmall(
+                                  borderRadius: AppRadius.radiusPill,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle_rounded,
+                                      size: 14,
                                       color: AppColors.success,
-                                      fontWeight: FontWeight.w800,
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'EQUIPPED',
+                                      style: AppTextStyles.buttonSmall(
+                                        color: AppColors.success,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                         ],
@@ -193,24 +203,37 @@ class ThemesScreen extends StatelessWidget {
                       Row(
                         children: [
                           // Color Swatches
-                          ...palette.previewColors.map(
-                            (c) => Container(
-                              margin: const EdgeInsets.only(right: 6),
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: c,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.15),
-                                    blurRadius: 4,
+                          ...palette.previewColors.asMap().entries.map(
+                            (entry) => TweenAnimationBuilder<double>(
+                              tween: Tween<double>(begin: 0.7, end: 1.0),
+                              duration: Duration(
+                                milliseconds: 200 + entry.key * 50,
+                              ),
+                              curve: Curves.elasticOut,
+                              builder: (context, scale, child) =>
+                                  Transform.scale(
+                                scale: scale,
+                                child: child,
+                              ),
+                              child: Container(
+                                margin: const EdgeInsets.only(right: 6),
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: entry.value,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
                                   ),
-                                ],
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          Colors.black.withValues(alpha: 0.15),
+                                      blurRadius: 4,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),

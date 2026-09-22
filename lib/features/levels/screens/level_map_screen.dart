@@ -229,12 +229,32 @@ class LevelMapScreen extends StatelessWidget {
   }
 
   Widget _buildActiveLevel27Card(BuildContext context) {
-    return AppCard(
-      padding: AppSpacing.paddingLg,
-      border: Border.all(color: const Color(0xFF6C5CE7), width: 2.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOut,
+      builder: (context, glowProgress, child) {
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: AppRadius.radiusLg,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6C5CE7)
+                    .withValues(alpha: 0.28 * glowProgress),
+                blurRadius: 18 * glowProgress,
+                spreadRadius: 2 * glowProgress,
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
+      child: AppCard(
+        padding: AppSpacing.paddingLg,
+        border: Border.all(color: const Color(0xFF6C5CE7), width: 2.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -327,6 +347,7 @@ class LevelMapScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

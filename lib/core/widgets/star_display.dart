@@ -10,6 +10,8 @@ class StarDisplay extends StatelessWidget {
   final Color activeColor;
   final Color inactiveColor;
 
+  final bool animate;
+
   const StarDisplay({
     super.key,
     required this.earnedStars,
@@ -17,6 +19,7 @@ class StarDisplay extends StatelessWidget {
     this.starSize = 18.0,
     this.activeColor = AppColors.starActive,
     this.inactiveColor = AppColors.starInactive,
+    this.animate = false,
   });
 
   @override
@@ -25,13 +28,30 @@ class StarDisplay extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: List.generate(maxStars, (index) {
         final isFilled = index < earnedStars;
-        return Padding(
+        final iconWidget = Padding(
           padding: const EdgeInsets.symmetric(horizontal: 1.5),
           child: Icon(
             isFilled ? Icons.star_rounded : Icons.star_outline_rounded,
             size: starSize,
             color: isFilled ? activeColor : inactiveColor,
           ),
+        );
+
+        if (!animate || !isFilled) {
+          return iconWidget;
+        }
+
+        return TweenAnimationBuilder<double>(
+          tween: Tween<double>(begin: 0.0, end: 1.0),
+          duration: Duration(milliseconds: 350 + (index * 150)),
+          curve: Curves.elasticOut,
+          builder: (context, scale, child) {
+            return Transform.scale(
+              scale: scale,
+              child: child,
+            );
+          },
+          child: iconWidget,
         );
       }),
     );
