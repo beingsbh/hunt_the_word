@@ -155,17 +155,17 @@ class DailyChallengeScreen extends StatelessWidget {
                             color: isToday
                                 ? const Color(0xFF6C5CE7)
                                 : (day.isCompleted
-                                      ? AppColors.primaryEmerald.withValues(
-                                          alpha: 0.12,
-                                        )
-                                      : Colors.transparent),
+                                    ? AppColors.primaryEmerald.withValues(
+                                        alpha: 0.12,
+                                      )
+                                    : Colors.transparent),
                             borderRadius: AppRadius.radiusMd,
                             border: Border.all(
                               color: isToday
                                   ? const Color(0xFF6C5CE7)
                                   : (day.isCompleted
-                                        ? AppColors.primaryEmerald
-                                        : Colors.grey.shade300),
+                                      ? AppColors.primaryEmerald
+                                      : Colors.grey.shade300),
                             ),
                           ),
                           child: Column(
@@ -176,8 +176,8 @@ class DailyChallengeScreen extends StatelessWidget {
                                   color: isToday
                                       ? Colors.white
                                       : (day.isCompleted
-                                            ? AppColors.primaryEmerald
-                                            : Colors.grey),
+                                          ? AppColors.primaryEmerald
+                                          : Colors.grey),
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -508,10 +508,28 @@ class DailyChallengeScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Past Challenges', style: AppTextStyles.headlineSmall()),
-                Text(
-                  'VIEW ALL >',
-                  style: AppTextStyles.buttonSmall(
-                    color: theme.colorScheme.primary,
+                InkWell(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'All previous daily challenges are completed and synced!'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      'VIEW ALL >',
+                      style: AppTextStyles.buttonSmall(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -570,7 +588,7 @@ class DailyChallengeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 100),
           ],
         ),
       ),

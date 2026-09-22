@@ -43,14 +43,14 @@ class DailyChallengeProvider extends ChangeNotifier {
   }
 
   List<CalendarDayItem> get weeklyCalendar => const [
-    CalendarDayItem(dayName: 'M', dateNumber: 16, isCompleted: true),
-    CalendarDayItem(dayName: 'T', dateNumber: 17, isCompleted: true),
-    CalendarDayItem(dayName: 'W', dateNumber: 18, isCompleted: true),
-    CalendarDayItem(dayName: 'T', dateNumber: 19, isCompleted: true),
-    CalendarDayItem(dayName: 'F', dateNumber: 20, isCompleted: true),
-    CalendarDayItem(dayName: 'SAT', dateNumber: 21, isToday: true),
-    CalendarDayItem(dayName: 'SUN', dateNumber: 22, isLocked: true),
-  ];
+        CalendarDayItem(dayName: 'M', dateNumber: 16, isCompleted: true),
+        CalendarDayItem(dayName: 'T', dateNumber: 17, isCompleted: true),
+        CalendarDayItem(dayName: 'W', dateNumber: 18, isCompleted: true),
+        CalendarDayItem(dayName: 'T', dateNumber: 19, isCompleted: true),
+        CalendarDayItem(dayName: 'F', dateNumber: 20, isCompleted: true),
+        CalendarDayItem(dayName: 'SAT', dateNumber: 21, isToday: true),
+        CalendarDayItem(dayName: 'SUN', dateNumber: 22, isLocked: true),
+      ];
 
   void completeToday() {
     _storage.markDailyCompleted('2024-09-21');

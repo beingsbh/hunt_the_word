@@ -169,7 +169,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
             _buildMasterHunterCard(),
             const SizedBox(height: AppSpacing.sm),
             _buildNightOwlCard(),
-            const SizedBox(height: 40),
+            const SizedBox(height: 100),
           ],
         ),
       ),

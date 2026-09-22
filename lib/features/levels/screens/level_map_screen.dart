@@ -172,7 +172,7 @@ class LevelMapScreen extends StatelessWidget {
                     subtitle: '3-STAR MASTER',
                     color: AppColors.primaryEmerald,
                   ),
-                  const SizedBox(height: 60),
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
@@ -180,7 +180,7 @@ class LevelMapScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 60),
+        padding: const EdgeInsets.only(bottom: 80),
         child: FloatingActionButton(
           mini: true,
           backgroundColor: AppColors.coinGoldDark,
@@ -255,99 +255,102 @@ class LevelMapScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.15),
-                  borderRadius: AppRadius.radiusPill,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.15),
+                    borderRadius: AppRadius.radiusPill,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.bolt_rounded,
+                        size: 14,
+                        color: AppColors.warning,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        'SPEED CHALLENGE',
+                        style:
+                            AppTextStyles.buttonSmall(color: AppColors.warning)
+                                .copyWith(fontSize: 10),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.bolt_rounded,
-                      size: 14,
-                      color: AppColors.warning,
-                    ),
-                    const SizedBox(width: 2),
-                    Text(
-                      'SPEED CHALLENGE',
-                      style: AppTextStyles.buttonSmall(color: AppColors.warning)
-                          .copyWith(fontSize: 10),
-                    ),
-                  ],
+                const Text(
+                  '8/10 Words',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF6C5CE7),
+                  ),
                 ),
-              ),
-              const Text(
-                '8/10 Words',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF6C5CE7),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6C5CE7),
-                  borderRadius: AppRadius.radiusMd,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF6C5CE7).withValues(alpha: 0.4),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Text(
-                    '27',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6C5CE7),
+                    borderRadius: AppRadius.radiusMd,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF6C5CE7).withValues(alpha: 0.4),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text(
+                      '27',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Coral Trench', style: AppTextStyles.headlineMedium()),
-                    Text(
-                      'Find 10 hidden sea words before time expires',
-                      style: AppTextStyles.bodySmall(),
-                    ),
-                  ],
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Coral Trench',
+                          style: AppTextStyles.headlineMedium()),
+                      Text(
+                        'Find 10 hidden sea words before time expires',
+                        style: AppTextStyles.bodySmall(),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppButton(
-            text: 'PLAY NOW',
-            icon: Icons.play_arrow_rounded,
-            onPressed: () => _onStartLevel(context, 27, 'Coral Trench'),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Center(
-            child: Text(
-              '★★☆ Earn 3 Stars for 50 Bonus Coins',
-              style: AppTextStyles.bodySmall().copyWith(fontSize: 11),
+              ],
             ),
-          ),
-        ],
-      ),
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
+              text: 'PLAY NOW',
+              icon: Icons.play_arrow_rounded,
+              onPressed: () => _onStartLevel(context, 27, 'Coral Trench'),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Center(
+              child: Text(
+                '★★☆ Earn 3 Stars for 50 Bonus Coins',
+                style: AppTextStyles.bodySmall().copyWith(fontSize: 11),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -451,40 +454,53 @@ class LevelMapScreen extends StatelessWidget {
     required String title,
     required String subtitle,
   }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: AppColors.error.withValues(alpha: 0.15),
-            borderRadius: AppRadius.radiusMd,
-            border: Border.all(color: AppColors.error.withValues(alpha: 0.5)),
-          ),
-          child: const Center(
-            child: Icon(
-              Icons.card_giftcard_rounded,
-              color: AppColors.error,
-              size: 24,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => GameScreen(
+              levelNumber: level,
+              category: title,
             ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Lvl $level $title',
-                style: AppTextStyles.headlineSmall().copyWith(fontSize: 14),
+        );
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.15),
+              borderRadius: AppRadius.radiusMd,
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.5)),
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.card_giftcard_rounded,
+                color: AppColors.error,
+                size: 24,
               ),
-              Text(subtitle, style: AppTextStyles.bodySmall()),
-            ],
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: AppSpacing.md),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Lvl $level $title',
+                  style: AppTextStyles.headlineSmall().copyWith(fontSize: 14),
+                ),
+                Text(subtitle, style: AppTextStyles.bodySmall()),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -55,23 +55,24 @@ class _GameScreenContentState extends State<_GameScreenContent> {
   void _checkVictory(GameProvider vm) {
     if (vm.isLevelCompleted && !_victoryDialogShown) {
       _victoryDialogShown = true;
-      final earnedStars = vm.elapsedSeconds < 180
-          ? 3
-          : (vm.elapsedSeconds < 300 ? 2 : 1);
+      final earnedStars =
+          vm.elapsedSeconds < 180 ? 3 : (vm.elapsedSeconds < 300 ? 2 : 1);
       final earnedScore = 500 + (vm.totalWords * 50);
 
-      // Persist level completion, score, and coins
-      context.read<LevelProgressProvider>().completeLevel(
-        vm.levelNumber,
-        earnedStars,
-        earnedScore,
-      );
-      context.read<PlayerProfileProvider>().updateCoins(25);
-      context.read<PlayerProfileProvider>().incrementWordsFound(
-        vm.totalWords,
-      );
-
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        // Persist level completion, score, and coins
+        context.read<LevelProgressProvider>().completeLevel(
+              vm.levelNumber,
+              earnedStars,
+              earnedScore,
+            );
+        context.read<PlayerProfileProvider>().updateCoins(25);
+        context.read<PlayerProfileProvider>().incrementWordsFound(
+              vm.totalWords,
+            );
+
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -81,19 +82,19 @@ class _GameScreenContentState extends State<_GameScreenContent> {
             score: earnedScore,
             time: vm.formattedTime,
             coinsEarned: 25,
-            onPreviousLevel: vm.levelNumber > 1
-                ? () {
-                    Navigator.of(dialogCtx).pop();
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (_) => GameScreen(
-                          levelNumber: vm.levelNumber - 1,
-                          category: vm.category,
-                        ),
-                      ),
-                    );
-                  }
-                : null,
+            onPreviousLevel: () {
+              if (vm.levelNumber > 1) {
+                Navigator.of(dialogCtx).pop();
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => GameScreen(
+                      levelNumber: vm.levelNumber - 1,
+                      category: vm.category,
+                    ),
+                  ),
+                );
+              }
+            },
             onNextLevel: () {
               Navigator.of(dialogCtx).pop();
               // Navigate to next level
@@ -369,9 +370,8 @@ class _GameScreenContentState extends State<_GameScreenContent> {
                       const SizedBox(width: AppSpacing.xs),
                   itemBuilder: (context, index) {
                     final p = vm.placements[index];
-                    final color =
-                        AppColors.wordHighlights[p.colorIndex %
-                            AppColors.wordHighlights.length];
+                    final color = AppColors.wordHighlights[
+                        p.colorIndex % AppColors.wordHighlights.length];
                     return Center(
                       child: TargetWordChip(
                         word: p.word,

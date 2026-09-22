@@ -32,12 +32,12 @@ class WordPlacement {
   }
 
   Map<String, dynamic> toMap() => {
-    'word': word,
-    'coordinates': coordinates.map((c) => c.toMap()).toList(),
-    'direction': direction.name,
-    'isFound': isFound,
-    'colorIndex': colorIndex,
-  };
+        'word': word,
+        'coordinates': coordinates.map((c) => c.toMap()).toList(),
+        'direction': direction.name,
+        'isFound': isFound,
+        'colorIndex': colorIndex,
+      };
 
   factory WordPlacement.fromMap(Map<dynamic, dynamic> map) {
     return WordPlacement(

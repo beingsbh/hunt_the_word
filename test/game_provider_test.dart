@@ -93,7 +93,8 @@ void main() {
       expect(provider.selectedCells[3], const GridCoordinate(0, 3));
     });
 
-    test('Selecting a correct word marks it found, updates score and progress', () {
+    test('Selecting a correct word marks it found, updates score and progress',
+        () {
       final provider = GameProvider(
         levelNumber: 1,
         category: 'Testing',
@@ -119,7 +120,9 @@ void main() {
       expect(provider.lastDiscoveredWord?.word, targetPlacement.word);
     });
 
-    test('Selecting an incorrect word triggers error animation and clears selection', () async {
+    test(
+        'Selecting an incorrect word triggers error animation and clears selection',
+        () async {
       final provider = GameProvider(
         levelNumber: 1,
         category: 'Testing',

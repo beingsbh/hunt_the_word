@@ -89,8 +89,8 @@ class TargetWordChip extends StatelessWidget {
                 style: AppTextStyles.buttonSmall(
                   color: isFound
                       ? (isDark
-                            ? Colors.white
-                            : Color.lerp(color, Colors.black, 0.4)!)
+                          ? Colors.white
+                          : Color.lerp(color, Colors.black, 0.4)!)
                       : theme.colorScheme.onSurface,
                   fontWeight: isFound ? FontWeight.w800 : FontWeight.w600,
                 ).copyWith(

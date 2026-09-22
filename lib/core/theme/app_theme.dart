@@ -33,66 +33,65 @@ class AppTheme {
       onError: Colors.white,
     );
 
-    final textTheme =
-        GoogleFonts.plusJakartaSansTextTheme(
-          ThemeData(brightness: brightness).textTheme,
-        ).copyWith(
-          displayLarge: GoogleFonts.outfit(
-            fontSize: 36,
-            fontWeight: FontWeight.w800,
-            color: palette.textPrimary,
-          ),
-          displayMedium: GoogleFonts.outfit(
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
-            color: palette.textPrimary,
-          ),
-          displaySmall: GoogleFonts.outfit(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: palette.textPrimary,
-          ),
-          headlineLarge: GoogleFonts.outfit(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            color: palette.textPrimary,
-          ),
-          headlineMedium: GoogleFonts.outfit(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: palette.textPrimary,
-          ),
-          headlineSmall: GoogleFonts.outfit(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: palette.textPrimary,
-          ),
-          titleLarge: GoogleFonts.outfit(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: palette.textPrimary,
-          ),
-          titleMedium: GoogleFonts.outfit(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: palette.textPrimary,
-          ),
-          bodyLarge: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: palette.textPrimary,
-          ),
-          bodyMedium: GoogleFonts.plusJakartaSans(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: palette.textSecondary,
-          ),
-          bodySmall: GoogleFonts.plusJakartaSans(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: palette.textSecondary,
-          ),
-        );
+    final textTheme = GoogleFonts.plusJakartaSansTextTheme(
+      ThemeData(brightness: brightness).textTheme,
+    ).copyWith(
+      displayLarge: GoogleFonts.outfit(
+        fontSize: 36,
+        fontWeight: FontWeight.w800,
+        color: palette.textPrimary,
+      ),
+      displayMedium: GoogleFonts.outfit(
+        fontSize: 28,
+        fontWeight: FontWeight.w800,
+        color: palette.textPrimary,
+      ),
+      displaySmall: GoogleFonts.outfit(
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+        color: palette.textPrimary,
+      ),
+      headlineLarge: GoogleFonts.outfit(
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
+        color: palette.textPrimary,
+      ),
+      headlineMedium: GoogleFonts.outfit(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: palette.textPrimary,
+      ),
+      headlineSmall: GoogleFonts.outfit(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: palette.textPrimary,
+      ),
+      titleLarge: GoogleFonts.outfit(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: palette.textPrimary,
+      ),
+      titleMedium: GoogleFonts.outfit(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: palette.textPrimary,
+      ),
+      bodyLarge: GoogleFonts.plusJakartaSans(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: palette.textPrimary,
+      ),
+      bodyMedium: GoogleFonts.plusJakartaSans(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: palette.textSecondary,
+      ),
+      bodySmall: GoogleFonts.plusJakartaSans(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        color: palette.textSecondary,
+      ),
+    );
 
     return ThemeData(
       useMaterial3: true,

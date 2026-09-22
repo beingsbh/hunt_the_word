@@ -101,7 +101,7 @@ class ThemesScreen extends StatelessWidget {
               final isEquipped = themeProvider.activeThemeId == palette.id;
               final isUnlocked =
                   themeProvider.unlockedThemeIds.contains(palette.id) ||
-                  palette.isUnlockedDefault;
+                      palette.isUnlockedDefault;
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -204,39 +204,39 @@ class ThemesScreen extends StatelessWidget {
                         children: [
                           // Color Swatches
                           ...palette.previewColors.asMap().entries.map(
-                            (entry) => TweenAnimationBuilder<double>(
-                              tween: Tween<double>(begin: 0.7, end: 1.0),
-                              duration: Duration(
-                                milliseconds: 200 + entry.key * 50,
-                              ),
-                              curve: Curves.elasticOut,
-                              builder: (context, scale, child) =>
-                                  Transform.scale(
-                                scale: scale,
-                                child: child,
-                              ),
-                              child: Container(
-                                margin: const EdgeInsets.only(right: 6),
-                                width: 24,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  color: entry.value,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2,
+                                (entry) => TweenAnimationBuilder<double>(
+                                  tween: Tween<double>(begin: 0.7, end: 1.0),
+                                  duration: Duration(
+                                    milliseconds: 200 + entry.key * 50,
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.15),
-                                      blurRadius: 4,
+                                  curve: Curves.elasticOut,
+                                  builder: (context, scale, child) =>
+                                      Transform.scale(
+                                    scale: scale,
+                                    child: child,
+                                  ),
+                                  child: Container(
+                                    margin: const EdgeInsets.only(right: 6),
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      color: entry.value,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.15),
+                                          blurRadius: 4,
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
                           const Spacer(),
 
                           // Sample Tiles Preview

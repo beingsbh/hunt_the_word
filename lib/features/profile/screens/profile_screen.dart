@@ -9,13 +9,42 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_progress_bar.dart';
 import '../../../core/widgets/gradient_background.dart';
+import '../../achievements/screens/achievements_screen.dart';
+import '../../levels/screens/level_map_screen.dart';
 import '../../settings/screens/settings_screen.dart';
 import '../../themes/screens/themes_screen.dart';
 import '../viewmodels/player_profile_provider.dart';
 
 /// Player Profile screen matching the exact Word Hunt design mockup.
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  final VoidCallback? onOpenBadges;
+  final VoidCallback? onOpenJourney;
+
+  const ProfileScreen({
+    super.key,
+    this.onOpenBadges,
+    this.onOpenJourney,
+  });
+
+  void _openBadges(BuildContext context) {
+    if (onOpenBadges != null) {
+      onOpenBadges!();
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const AchievementsScreen()),
+      );
+    }
+  }
+
+  void _openJourney(BuildContext context) {
+    if (onOpenJourney != null) {
+      onOpenJourney!();
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const LevelMapScreen()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +100,8 @@ class ProfileScreen extends StatelessWidget {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.coinGold.withValues(alpha: 0.35),
+                                color:
+                                    AppColors.coinGold.withValues(alpha: 0.35),
                                 blurRadius: 14,
                                 offset: const Offset(0, 4),
                               ),
@@ -269,10 +299,33 @@ class ProfileScreen extends StatelessWidget {
                     style: AppTextStyles.headlineSmall(),
                   ),
                 ),
-                Text(
-                  'View All (18)',
-                  style: AppTextStyles.buttonSmall(
-                    color: theme.colorScheme.primary,
+                InkWell(
+                  onTap: () => _openBadges(context),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'View All (18)',
+                          style: AppTextStyles.buttonSmall(
+                            color: theme.colorScheme.primary,
+                          ).copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 16,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -282,6 +335,7 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: _buildBadgePill(
+                    context,
                     'Speed Solver',
                     'Gold Tier',
                     Icons.bolt_rounded,
@@ -291,7 +345,8 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: _buildBadgePill(
-                    'Perfect...',
+                    context,
+                    'Perfectionist',
                     'Master Tier',
                     Icons.star_rounded,
                     const Color(0xFF6C5CE7),
@@ -300,7 +355,8 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: _buildBadgePill(
-                    'Ocean...',
+                    context,
+                    'Ocean Diver',
                     'Special Event',
                     Icons.water_rounded,
                     AppColors.primaryCyan,
@@ -312,6 +368,7 @@ class ProfileScreen extends StatelessWidget {
 
             // Current Journey Card
             AppCard(
+              onTap: () => _openJourney(context),
               padding: AppSpacing.paddingMd,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,8 +443,18 @@ class ProfileScreen extends StatelessWidget {
                       style: TextStyle(fontSize: 12),
                     ),
                     trailing: Switch(
-                      value: true,
-                      onChanged: (_) {},
+                      value: profile.isCloudSaveEnabled,
+                      onChanged: (val) {
+                        profile.toggleCloudSave(val);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            duration: const Duration(seconds: 1),
+                            content: Text(
+                              val ? 'Cloud save enabled' : 'Cloud save paused',
+                            ),
+                          ),
+                        );
+                      },
                       activeTrackColor: AppColors.primaryEmerald,
                     ),
                   ),
@@ -446,7 +513,7 @@ class ProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -477,12 +544,14 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildBadgePill(
+    BuildContext context,
     String title,
     String subtitle,
     IconData icon,
     Color color,
   ) {
     return AppCard(
+      onTap: () => _openBadges(context),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xs,
         vertical: AppSpacing.sm,
@@ -499,16 +568,21 @@ class ProfileScreen extends StatelessWidget {
             ),
             child: Icon(icon, color: color, size: 22),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             title,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
+          const SizedBox(height: 2),
           Text(
             subtitle,
             style: const TextStyle(color: Colors.grey, fontSize: 9),
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

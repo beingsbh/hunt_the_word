@@ -99,8 +99,7 @@ class GameProvider extends ChangeNotifier {
       totalWords == 0 ? 0.0 : foundWordsCount / totalWords;
 
   /// Currently selected coordinates during user drag.
-  List<GridCoordinate> get selectedCells =>
-      List.unmodifiable(_selectedCells);
+  List<GridCoordinate> get selectedCells => List.unmodifiable(_selectedCells);
 
   /// Backwards-compatible alias for [selectedCells].
   List<GridCoordinate> get selectedCoordinates => selectedCells;

@@ -8,7 +8,9 @@ import 'package:hunt_the_word/features/profile/viewmodels/player_profile_provide
 
 void main() {
   group('Unique Username & Social Login Flow', () {
-    testWidgets('New user gets 500 coins and triggers username setup upon social login', (
+    testWidgets(
+        'New user gets 500 coins and triggers username setup upon social login',
+        (
       WidgetTester tester,
     ) async {
       tester.view.physicalSize = const Size(1080, 2400);
@@ -52,7 +54,9 @@ void main() {
       expect(profileProvider.hasSetUniqueUsername, isFalse);
     });
 
-    testWidgets('Home screen shows unique username popup on first login and sets username once', (
+    testWidgets(
+        'Home screen shows unique username popup on first login and sets username once',
+        (
       WidgetTester tester,
     ) async {
       tester.view.physicalSize = const Size(1080, 2400);
@@ -95,7 +99,8 @@ void main() {
       // Get initial generated username
       final textField = find.byType(TextField);
       expect(textField, findsOneWidget);
-      final initialName = (tester.widget<TextField>(textField)).controller!.text;
+      final initialName =
+          (tester.widget<TextField>(textField)).controller!.text;
       expect(initialName.isNotEmpty, isTrue);
 
       // Tap Roll to generate a new name

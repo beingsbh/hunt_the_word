@@ -89,13 +89,11 @@ class _AppButtonState extends State<AppButton>
     switch (widget.variant) {
       case AppButtonVariant.primary:
         bg = effectiveColor ?? theme.colorScheme.primary;
-        fg =
-            widget.textColor ??
+        fg = widget.textColor ??
             (bg == Colors.white ? theme.colorScheme.primary : Colors.white);
         break;
       case AppButtonVariant.secondary:
-        bg =
-            effectiveColor ??
+        bg = effectiveColor ??
             theme.colorScheme.primaryContainer.withValues(alpha: 0.2);
         fg = widget.textColor ?? theme.colorScheme.primary;
         break;
@@ -163,8 +161,7 @@ class _AppButtonState extends State<AppButton>
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final effectiveWidth =
-            widget.width ??
+        final effectiveWidth = widget.width ??
             (constraints.hasBoundedWidth ? double.infinity : null);
 
         return ScaleTransition(
@@ -181,28 +178,28 @@ class _AppButtonState extends State<AppButton>
                 color: widget.gradient == null ? bg : null,
                 gradient:
                     widget.variant == AppButtonVariant.primary && isEnabled
-                    ? (widget.gradient ??
-                          LinearGradient(
-                            colors: [
-                              bg,
-                              Color.lerp(bg, Colors.black, 0.1) ?? bg,
-                            ],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ))
-                    : null,
+                        ? (widget.gradient ??
+                            LinearGradient(
+                              colors: [
+                                bg,
+                                Color.lerp(bg, Colors.black, 0.1) ?? bg,
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ))
+                        : null,
                 borderRadius: AppRadius.radiusPill,
                 border: border,
                 boxShadow:
                     widget.variant == AppButtonVariant.primary && isEnabled
-                    ? [
-                        BoxShadow(
-                          color: bg.withValues(alpha: 0.35),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : null,
+                        ? [
+                            BoxShadow(
+                              color: bg.withValues(alpha: 0.35),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : null,
               ),
               alignment: Alignment.center,
               padding: EdgeInsets.symmetric(

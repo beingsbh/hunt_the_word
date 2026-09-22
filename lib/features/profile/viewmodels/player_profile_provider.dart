@@ -39,6 +39,14 @@ class PlayerProfileProvider extends ChangeNotifier {
   bool get needsUsernameSetup =>
       _profile['needsUsernameSetup'] as bool? ?? false;
 
+  bool get isCloudSaveEnabled => _profile['cloudSaveEnabled'] as bool? ?? true;
+
+  void toggleCloudSave(bool enabled) {
+    _profile['cloudSaveEnabled'] = enabled;
+    _storage.savePlayerProfile(_profile);
+    notifyListeners();
+  }
+
   void updateCoins(int delta) {
     final newCoins = (coins + delta).clamp(0, 999999);
     _profile['coins'] = newCoins;

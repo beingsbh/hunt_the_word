@@ -73,11 +73,20 @@ class _InteractiveGameBoardState extends State<InteractiveGameBoard>
         final boardHeight =
             (cellSize * rows) + ((rows - 1) * cellGap) + (padding * 2);
 
-        GridCoordinate? getCoordFromLocalOffset(Offset local) {
+        GridCoordinate? getCoordFromLocalOffset(
+          Offset local, {
+          bool isDragging = false,
+        }) {
           final x = local.dx - padding;
           final y = local.dy - padding;
-          final c = (x / (cellSize + cellGap)).floor();
-          final r = (y / (cellSize + cellGap)).floor();
+          int c = (x / (cellSize + cellGap)).floor();
+          int r = (y / (cellSize + cellGap)).floor();
+
+          if (isDragging) {
+            c = c.clamp(0, cols - 1);
+            r = r.clamp(0, rows - 1);
+            return GridCoordinate(r, c);
+          }
 
           if (r >= 0 && r < rows && c >= 0 && c < cols) {
             return GridCoordinate(r, c);
@@ -87,7 +96,8 @@ class _InteractiveGameBoardState extends State<InteractiveGameBoard>
 
         return Center(
           child: AnimatedBuilder(
-            animation: Listenable.merge([_wobbleController, _celebrateController]),
+            animation:
+                Listenable.merge([_wobbleController, _celebrateController]),
             builder: (context, child) {
               final wobble = sin(_wobbleController.value * pi * 4) *
                   (1.0 - _wobbleController.value) *
@@ -111,7 +121,10 @@ class _InteractiveGameBoardState extends State<InteractiveGameBoard>
                 }
               },
               onPanUpdate: (details) {
-                final coord = getCoordFromLocalOffset(details.localPosition);
+                final coord = getCoordFromLocalOffset(
+                  details.localPosition,
+                  isDragging: true,
+                );
                 if (coord != null) {
                   vm.onPanUpdate(coord);
                 }
@@ -122,8 +135,7 @@ class _InteractiveGameBoardState extends State<InteractiveGameBoard>
                 height: boardHeight,
                 padding: const EdgeInsets.all(padding),
                 decoration: BoxDecoration(
-                  color:
-                      theme.cardTheme.color?.withValues(alpha: 0.8) ??
+                  color: theme.cardTheme.color?.withValues(alpha: 0.8) ??
                       Colors.white,
                   borderRadius: AppRadius.radiusXl,
                   border: Border.all(
@@ -155,9 +167,8 @@ class _InteractiveGameBoardState extends State<InteractiveGameBoard>
                         } else if (foundMap.containsKey(coord)) {
                           status = LetterCellStatus.found;
                           final colorIdx = foundMap[coord] ?? 0;
-                          highlightColor =
-                              AppColors.wordHighlights[colorIdx %
-                                  AppColors.wordHighlights.length];
+                          highlightColor = AppColors.wordHighlights[
+                              colorIdx % AppColors.wordHighlights.length];
                         } else if (hintCoord == coord) {
                           status = LetterCellStatus.highlighted;
                         } else {
