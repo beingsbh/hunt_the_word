@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../app/main_navigation_shell.dart';
 import '../../../core/audio/audio_haptic_service.dart';
@@ -11,6 +12,8 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/gradient_background.dart';
 import '../../auth/screens/login_screen.dart';
+import '../../levels/viewmodels/level_progress_provider.dart';
+import '../../profile/viewmodels/player_profile_provider.dart';
 import '../../themes/screens/themes_screen.dart';
 
 /// Settings Screen for sound, haptics, cloud save, and reset options.
@@ -69,8 +72,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               profile['puzzlesSolved'] = 0;
               profile['wordsFound'] = 0;
               await _storage.savePlayerProfile(profile);
+              await _storage.clearActiveGame();
 
               if (mounted) {
+                context.read<PlayerProfileProvider>().refreshFromStorage();
+                context.read<LevelProgressProvider>().resetProgress();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Progress reset successfully')),
                 );

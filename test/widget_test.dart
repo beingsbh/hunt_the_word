@@ -50,15 +50,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Subha WordMaster'), findsOneWidget);
     expect(find.text('Levels Solved'), findsOneWidget);
-    expect(find.text('Words Found'), findsOneWidget);
+    expect(find.text('Daily Streak'), findsOneWidget);
 
     // 4. Test Opening Badges via Profile 'View All (18)'
     expect(find.text('View All (18)'), findsOneWidget);
     await tester.tap(find.text('View All (18)'));
     await tester.pumpAndSettle();
-    expect(find.text('18 of 36 Badges'), findsOneWidget);
-    expect(find.text('FIRST WORD'), findsOneWidget);
-    expect(find.text('WORD STREAK'), findsOneWidget);
+    expect(find.text('3 of 6 Badges'), findsOneWidget);
+    expect(find.text('FIRST DISCOVERY'), findsOneWidget);
+    expect(find.text('STREAK MASTER'), findsOneWidget);
 
     // Pop back from Badges to Profile
     await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
@@ -73,7 +73,7 @@ void main() {
 
     // Verify Gameplay Screen
     expect(find.text('FIND WORDS'), findsOneWidget);
-    expect(find.text('Hint 20🪙'), findsOneWidget);
+    expect(find.text('Hint 5'), findsOneWidget);
 
     // 6. Return back to Home screen
     await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));

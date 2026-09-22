@@ -53,7 +53,7 @@ void main() {
   );
 
   testWidgets(
-    'LevelCompleteDialog displays Mystery Gift for Level 29 and claims 500 coins',
+    'LevelCompleteDialog displays Mystery Gift for Level 29 and claims 45 coins',
     (WidgetTester tester) async {
       await tester.pumpWidget(
         MultiProvider(
@@ -88,7 +88,7 @@ void main() {
 
       // After claim, button transitions to CLAIMED
       expect(find.text('CLAIMED'), findsOneWidget);
-      expect(find.text('+500 Coins Claimed!'), findsOneWidget);
+      expect(find.text('+45 Coins Claimed!'), findsOneWidget);
     },
   );
 }

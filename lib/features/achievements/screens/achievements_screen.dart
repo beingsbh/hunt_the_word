@@ -4,12 +4,14 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/animated_coin_icon.dart';
 import '../../../core/widgets/app_bar.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_progress_bar.dart';
 import '../../../core/widgets/coin_badge.dart';
 import '../../../core/widgets/gradient_background.dart';
 import '../../profile/viewmodels/player_profile_provider.dart';
+import '../models/achievement_mock_data.dart';
 import '../viewmodels/achievements_provider.dart';
 
 /// Badges & Achievements screen matching the exact Word Hunt design mockup.
@@ -28,6 +30,29 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   Widget build(BuildContext context) {
     final profile = context.watch<PlayerProfileProvider>();
     final achievements = context.watch<AchievementsProvider>();
+
+    final allList = achievements.allAchievements;
+    final completedList = allList.where((a) => a.isCompleted).toList();
+    final inProgressList =
+        allList.where((a) => !a.isCompleted && a.currentProgress > 0).toList();
+    final lockedList =
+        allList.where((a) => !a.isCompleted && a.currentProgress == 0).toList();
+
+    List<AchievementMockItem> displayedList;
+    switch (_selectedFilterIndex) {
+      case 1:
+        displayedList = completedList;
+        break;
+      case 2:
+        displayedList = inProgressList;
+        break;
+      case 3:
+        displayedList = lockedList;
+        break;
+      default:
+        displayedList = allList;
+        break;
+    }
 
     return Scaffold(
       appBar: AppCustomBar(
@@ -70,11 +95,18 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                               .copyWith(fontSize: 10),
                         ),
                       ),
-                      Text(
-                        '🪙 1,450 PTS',
-                        style: AppTextStyles.buttonSmall(
-                          color: AppColors.coinGoldLight,
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const AnimatedCoinIcon(size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            '1,450 PTS',
+                            style: AppTextStyles.buttonSmall(
+                              color: AppColors.coinGoldLight,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -88,7 +120,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '18 of 36 Badges',
+                              '${achievements.completedCount} of ${achievements.totalAchievements} Badges',
                               style: AppTextStyles.headlineLarge(
                                 color: Colors.white,
                               ),
@@ -104,14 +136,17 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Text(
-                        '50%',
+                        '${(achievements.totalProgressFraction * 100).toInt()}%',
                         style: AppTextStyles.displayMedium(color: Colors.white),
                       ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
                   TweenAnimationBuilder<double>(
-                    tween: Tween<double>(begin: 0.0, end: 0.5),
+                    tween: Tween<double>(
+                      begin: 0.0,
+                      end: achievements.totalProgressFraction,
+                    ),
                     duration: const Duration(milliseconds: 550),
                     curve: Curves.easeOutCubic,
                     builder: (context, factor, _) {
@@ -141,35 +176,48 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildFilterTab('All (${achievements.totalAchievements})', 0),
+                  _buildFilterTab('All (${allList.length})', 0),
                   const SizedBox(width: AppSpacing.xs),
                   _buildFilterTab(
-                    'Completed (${achievements.completedCount})',
+                    'Completed (${completedList.length})',
                     1,
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   _buildFilterTab(
-                    'In Progress (${achievements.totalAchievements - achievements.completedCount})',
+                    'In Progress (${inProgressList.length})',
                     2,
                   ),
                   const SizedBox(width: AppSpacing.xs),
-                  _buildFilterTab('Locked (0)', 3),
+                  _buildFilterTab('Locked (${lockedList.length})', 3),
                 ],
               ),
             ),
             const SizedBox(height: AppSpacing.md),
 
-            // Achievement Cards matching Mockup
-            _buildFirstWordCard(),
-            const SizedBox(height: AppSpacing.sm),
-            _buildWordStreakCard(),
-            const SizedBox(height: AppSpacing.sm),
-            _buildSpeedSolverCard(),
-            const SizedBox(height: AppSpacing.sm),
-            _buildMasterHunterCard(),
-            const SizedBox(height: AppSpacing.sm),
-            _buildNightOwlCard(),
-            const SizedBox(height: 100),
+            // Dynamically filtered achievement cards
+            if (displayedList.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 40),
+                child: Center(
+                  child: Text(
+                    'No badges in this category yet.',
+                    style: AppTextStyles.bodyMedium(color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              ...displayedList.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: _buildAchievementCard(
+                    context,
+                    item,
+                    achievements,
+                    profile,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 80),
           ],
         ),
       ),
@@ -216,13 +264,40 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
     );
   }
 
-  Widget _buildFirstWordCard() {
+  Widget _buildAchievementCard(
+    BuildContext context,
+    AchievementMockItem item,
+    AchievementsProvider achievements,
+    PlayerProfileProvider profile,
+  ) {
+    Color badgeColor;
+    String statusLabel;
+    Color statusColor;
+
+    if (item.isClaimed) {
+      badgeColor = AppColors.coinGoldDark;
+      statusLabel = 'CLAIMED';
+      statusColor = AppColors.primaryEmerald;
+    } else if (item.isCompleted) {
+      badgeColor = AppColors.primaryEmerald;
+      statusLabel = 'COMPLETED';
+      statusColor = AppColors.coinGoldDark;
+    } else if (item.currentProgress > 0) {
+      badgeColor = AppColors.warning;
+      statusLabel = 'IN PROGRESS';
+      statusColor = AppColors.warning;
+    } else {
+      badgeColor = Colors.grey;
+      statusLabel = 'LOCKED';
+      statusColor = Colors.grey;
+    }
+
     return AppCard(
       padding: AppSpacing.paddingMd,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildBadgeIcon(Icons.search_rounded, AppColors.coinGoldDark),
+          _buildBadgeIcon(item.icon, badgeColor),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
@@ -233,347 +308,132 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        'FIRST WORD',
+                        item.title.toUpperCase(),
                         style: AppTextStyles.headlineSmall(),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
-                    _buildStatusChip('COMPLETED', AppColors.primaryEmerald),
+                    _buildStatusChip(statusLabel, statusColor),
                   ],
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Find your very first hidden word.',
+                  item.description,
                   style: AppTextStyles.bodySmall(),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${item.currentProgress} / ${item.targetProgress}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '${(item.progressFraction * 100).toInt()}%',
+                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                AppProgressBar(
+                  progress: item.progressFraction,
+                  height: 6,
+                  fillColor: badgeColor,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      '🪙 +25 Coins',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                      ),
-                    ),
                     Row(
                       children: [
-                        const Icon(
-                          Icons.check_circle_rounded,
-                          size: 14,
-                          color: AppColors.primaryEmerald,
-                        ),
+                        const AnimatedCoinIcon(size: 15),
                         const SizedBox(width: 4),
                         Text(
-                          'Claimed',
-                          style: AppTextStyles.bodySmall().copyWith(
-                            color: AppColors.primaryEmerald,
+                          '+${item.rewardCoins} Coins',
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
+                            fontSize: 11,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWordStreakCard() {
-    return AppCard(
-      padding: AppSpacing.paddingMd,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildBadgeIcon(
-            Icons.local_fire_department_rounded,
-            AppColors.warning,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'WORD STREAK',
-                        style: AppTextStyles.headlineSmall(),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    _buildStatusChip('IN PROGRESS', AppColors.warning),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Find 50 words without using a single hint.',
-                  style: AppTextStyles.bodySmall(),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      '32 / 50 Words',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Text(
-                      '64%',
-                      style: TextStyle(fontSize: 11, color: Colors.grey),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const AppProgressBar(
-                  progress: 0.64,
-                  height: 6,
-                  fillColor: AppColors.warning,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      '🪙 +100 Coins',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                      ),
-                    ),
-                    Text(
-                      '18 remaining',
-                      style: AppTextStyles.bodySmall().copyWith(fontSize: 10),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSpeedSolverCard() {
-    return AppCard(
-      padding: AppSpacing.paddingMd,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildBadgeIcon(Icons.bolt_rounded, const Color(0xFF6C5CE7)),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'SPEED SOLVER',
-                          style: AppTextStyles.headlineSmall(),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.star_rounded,
-                          size: 14,
-                          color: AppColors.starActive,
-                        ),
-                        const Icon(
-                          Icons.star_rounded,
-                          size: 14,
-                          color: AppColors.starActive,
-                        ),
-                        const Icon(
-                          Icons.star_rounded,
-                          size: 14,
-                          color: AppColors.starActive,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Solve an entire puzzle board in under 60 seconds.',
-                  style: AppTextStyles.bodySmall(),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                _buildStatusChip(
-                  'COMPLETED • 42S RECORD',
-                  AppColors.primaryEmerald,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      '🪙 +50 Coins',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.check_circle_rounded,
-                          size: 14,
-                          color: AppColors.primaryEmerald,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Claimed',
-                          style: AppTextStyles.bodySmall().copyWith(
-                            color: AppColors.primaryEmerald,
-                            fontWeight: FontWeight.bold,
+                    if (item.isCompleted && !item.isClaimed)
+                      GestureDetector(
+                        onTap: () async {
+                          final coins = await achievements.claimReward(item.id);
+                          if (coins != null && context.mounted) {
+                            profile.refreshFromStorage();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Claimed +$coins Coins! 🎉'),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                AppColors.coinGoldLight,
+                                AppColors.coinGoldDark,
+                              ],
+                            ),
+                            borderRadius: AppRadius.radiusPill,
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    AppColors.coinGold.withValues(alpha: 0.4),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Text(
+                            'CLAIM REWARD',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 11,
+                            ),
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMasterHunterCard() {
-    return AppCard(
-      padding: AppSpacing.paddingMd,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildBadgeIcon(Icons.military_tech_rounded, const Color(0xFF8B5CF6)),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'MASTER HUNTER',
-                        style: AppTextStyles.headlineSmall(),
-                        overflow: TextOverflow.ellipsis,
+                      )
+                    else if (item.isClaimed)
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            size: 14,
+                            color: AppColors.primaryEmerald,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Claimed',
+                            style: AppTextStyles.bodySmall().copyWith(
+                              color: AppColors.primaryEmerald,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Text(
+                        item.currentProgress == 0 ? 'Locked' : 'In Progress',
+                        style: AppTextStyles.bodySmall().copyWith(
+                          color: Colors.grey,
+                          fontSize: 11,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    _buildStatusChip('MAJOR GOAL', const Color(0xFF8B5CF6)),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Conquer 100 adventure levels.',
-                  style: AppTextStyles.bodySmall(),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      '72 / 100 Levels',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Text(
-                      '72%',
-                      style: TextStyle(fontSize: 11, color: Colors.grey),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const AppProgressBar(
-                  progress: 0.72,
-                  height: 6,
-                  fillColor: Color(0xFF8B5CF6),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                const Text(
-                  '🪙 +250 Coins & Master Title',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNightOwlCard() {
-    return AppCard(
-      padding: AppSpacing.paddingMd,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildBadgeIcon(Icons.dark_mode_rounded, Colors.grey),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'NIGHT OWL',
-                        style: AppTextStyles.headlineSmall(),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    _buildStatusChip('🔒 LOCKED', Colors.grey),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Complete 5 daily puzzles after 10 PM.',
-                  style: AppTextStyles.bodySmall(),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Progress: 1/5 Completed',
-                  style: AppTextStyles.bodySmall().copyWith(fontSize: 11),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      '🪙 +50 Coins',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                      ),
-                    ),
-                    Text(
-                      'Daily Challenge',
-                      style: AppTextStyles.bodySmall().copyWith(fontSize: 10),
-                    ),
                   ],
                 ),
               ],

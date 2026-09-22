@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/animated_coin_icon.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/star_display.dart';
 import '../../profile/viewmodels/player_profile_provider.dart';
@@ -21,6 +22,7 @@ class LevelCompleteDialog extends StatefulWidget {
   final VoidCallback? onHome;
   final VoidCallback? onPreviousLevel;
   final bool? hasMysteryGift;
+  final bool isDaily;
 
   const LevelCompleteDialog({
     super.key,
@@ -34,6 +36,7 @@ class LevelCompleteDialog extends StatefulWidget {
     this.onHome,
     this.onPreviousLevel,
     this.hasMysteryGift,
+    this.isDaily = false,
   });
 
   @override
@@ -53,7 +56,19 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
 
   bool get _hasMysteryGift =>
       widget.hasMysteryGift ??
-      (widget.levelNumber == 29 || widget.levelNumber % 10 == 9);
+      (widget.levelNumber == 29 ||
+          widget.levelNumber % 10 == 9 ||
+          widget.levelNumber % 10 == 0);
+
+  int get _mysteryBoxReward {
+    final interval = (widget.levelNumber / 10).ceil();
+    if (interval <= 1) return 20;
+    double reward = 20.0;
+    for (int i = 1; i < interval; i++) {
+      reward *= 1.5;
+    }
+    return reward.round();
+  }
 
   @override
   void initState() {
@@ -102,7 +117,7 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
     });
     _coinBurstController.forward(from: 0.0);
     try {
-      context.read<PlayerProfileProvider>().updateCoins(500);
+      context.read<PlayerProfileProvider>().updateCoins(_mysteryBoxReward);
     } catch (_) {}
   }
 
@@ -134,7 +149,7 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
                 ),
               ],
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -173,7 +188,9 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
 
                   // Title
                   Text(
-                    'LEVEL COMPLETE!',
+                    widget.isDaily
+                        ? 'DAILY COMPLETE!'
+                        : 'LEVEL COMPLETE!',
                     style: AppTextStyles.displaySmall(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w900,
@@ -181,7 +198,9 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    'Level ${widget.levelNumber} Solved',
+                    widget.isDaily
+                        ? "Today's Puzzle Solved"
+                        : 'Level ${widget.levelNumber} Solved',
                     style: AppTextStyles.bodyMedium(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
@@ -276,25 +295,29 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
                                 // Coins Earned
                                 Column(
                                   children: [
-                                    Text(
-                                      'REWARD',
-                                      style: AppTextStyles.bodySmall().copyWith(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
+                                     Text(
+                                       widget.isDaily
+                                           ? (widget.stars == 3
+                                               ? '3x REWARD'
+                                               : widget.stars == 2
+                                                   ? '2x REWARD'
+                                                   : 'NO REWARD')
+                                           : 'REWARD',
+                                       style: AppTextStyles.bodySmall().copyWith(
+                                         fontSize: 10,
+                                         fontWeight: FontWeight.w700,
+                                         letterSpacing: 0.5,
+                                       ),
+                                     ),
                                     const SizedBox(height: 2),
                                     Row(
                                       children: [
-                                        const Icon(
-                                          Icons.monetization_on_rounded,
-                                          size: 16,
-                                          color: AppColors.coinGoldDark,
-                                        ),
-                                        const SizedBox(width: 2),
+                                        const AnimatedCoinIcon(size: 16),
+                                        const SizedBox(width: 4),
                                         Text(
-                                          '+${widget.coinsEarned}',
+                                          widget.coinsEarned > 0
+                                              ? '+${widget.coinsEarned}'
+                                              : '0',
                                           style: AppTextStyles.headlineMedium(
                                             color: AppColors.coinGoldDark,
                                             fontWeight: FontWeight.w800,
@@ -316,28 +339,39 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
 
                           const SizedBox(height: AppSpacing.md),
 
-                          // Action Buttons: REPLAY and NEXT LEVEL (HOME and PREV LEVEL removed)
+                          // Action Buttons
                           Row(
                             children: [
-                              Expanded(
-                                child: AppButton(
-                                  text: 'REPLAY',
-                                  icon: Icons.replay_rounded,
-                                  variant: AppButtonVariant.secondary,
-                                  height: 48,
-                                  onPressed: widget.onReplay,
+                              if (widget.isDaily) ...[
+                                Expanded(
+                                  child: AppButton(
+                                    text: 'DONE & CLAIM',
+                                    icon: Icons.check_circle_rounded,
+                                    height: 48,
+                                    onPressed: widget.onHome ?? widget.onNextLevel,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Expanded(
-                                flex: 1,
-                                child: AppButton(
-                                  text: 'NEXT LEVEL',
-                                  icon: Icons.play_arrow_rounded,
-                                  height: 48,
-                                  onPressed: widget.onNextLevel,
+                              ] else ...[
+                                Expanded(
+                                  child: AppButton(
+                                    text: 'REPLAY',
+                                    icon: Icons.replay_rounded,
+                                    variant: AppButtonVariant.secondary,
+                                    height: 48,
+                                    onPressed: widget.onReplay,
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  flex: 1,
+                                  child: AppButton(
+                                    text: 'NEXT LEVEL',
+                                    icon: Icons.play_arrow_rounded,
+                                    height: 48,
+                                    onPressed: widget.onNextLevel,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ],
@@ -358,7 +392,7 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
 
   Widget _buildMysteryGiftCard(ThemeData theme, bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDark
@@ -392,8 +426,8 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
               child: child,
             ),
             child: Container(
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: const LinearGradient(
@@ -414,7 +448,7 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
                     ? Icons.lock_open_rounded
                     : Icons.card_giftcard_rounded,
                 color: Colors.white,
-                size: 24,
+                size: 22,
               ),
             ),
           ),
@@ -425,25 +459,32 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      'MYSTERY GIFT',
-                      style: AppTextStyles.headlineSmall().copyWith(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFFD97706),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'MYSTERY GIFT',
+                        style: AppTextStyles.headlineSmall().copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFFD97706),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Text('🎁', style: TextStyle(fontSize: 12)),
-                  ],
+                      const SizedBox(width: 4),
+                      const Text('🎁', style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   _mysteryClaimed
-                      ? '+500 Coins Claimed!'
-                      : 'Special level mystery prize',
+                      ? '+$_mysteryBoxReward Coins Claimed!'
+                      : 'Special level mystery prize (+$_mysteryBoxReward🪙)',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.bodySmall().copyWith(
                     fontSize: 11,
                     color: _mysteryClaimed
@@ -466,8 +507,8 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
                 foregroundColor: Colors.white,
                 elevation: 3,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
+                  horizontal: 12,
+                  vertical: 8,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: AppRadius.radiusPill,
@@ -476,17 +517,13 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.monetization_on_rounded,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                  SizedBox(width: 4),
+                  AnimatedCoinIcon(size: 15),
+                  SizedBox(width: 5),
                   Text(
                     'CLAIM',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      fontSize: 12,
+                      fontSize: 11.5,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -495,7 +532,7 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
             )
           else
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: BoxDecoration(
                 color: AppColors.success.withValues(alpha: 0.15),
                 borderRadius: AppRadius.radiusPill,
@@ -506,7 +543,7 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
                 children: [
                   Icon(
                     Icons.check_circle_rounded,
-                    size: 16,
+                    size: 15,
                     color: AppColors.success,
                   ),
                   SizedBox(width: 4),
@@ -568,11 +605,7 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
                               ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.monetization_on_rounded,
-                            color: AppColors.coinGold,
-                            size: 26,
-                          ),
+                          child: const AnimatedCoinIcon(size: 26),
                         ),
                       ),
                     ),
@@ -609,18 +642,14 @@ class _LevelCompleteDialogState extends State<LevelCompleteDialog>
                             ),
                           ],
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.monetization_on_rounded,
-                              size: 22,
-                              color: Colors.white,
-                            ),
-                            SizedBox(width: 6),
+                            const AnimatedCoinIcon(size: 24),
+                            const SizedBox(width: 6),
                             Text(
-                              '+500 COINS!',
-                              style: TextStyle(
+                              '+$_mysteryBoxReward COINS!',
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w900,
                                 fontSize: 16,

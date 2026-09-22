@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
+import '../../features/store/screens/coin_store_screen.dart';
+import 'animated_coin_icon.dart';
 
-/// Pill badge displaying the player's coin balance with a gold gradient and coin icon.
+/// Pill badge displaying the player's coin balance with an animated 3D coin icon.
 class CoinBadge extends StatelessWidget {
   final int coins;
   final VoidCallback? onTap;
@@ -15,7 +17,7 @@ class CoinBadge extends StatelessWidget {
     super.key,
     required this.coins,
     this.onTap,
-    this.iconSize = 16,
+    this.iconSize = 18,
     this.showAddIcon = false,
   });
 
@@ -45,21 +47,8 @@ class CoinBadge extends StatelessWidget {
                 child: child,
               );
             },
-            child: Container(
-              padding: const EdgeInsets.all(3),
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [AppColors.coinGoldLight, AppColors.coinGoldDark],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Icon(
-                Icons.monetization_on_rounded,
-                size: iconSize,
-                color: Colors.white,
-              ),
+            child: AnimatedCoinIcon(
+              size: iconSize + 2,
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
@@ -105,10 +94,18 @@ class CoinBadge extends StatelessWidget {
       ),
     );
 
-    if (onTap != null) {
-      return GestureDetector(onTap: onTap, child: content);
-    }
-    return content;
+    final effectiveTap = onTap ??
+        () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const CoinStoreScreen()),
+          );
+        };
+
+    return GestureDetector(
+      onTap: effectiveTap,
+      behavior: HitTestBehavior.opaque,
+      child: content,
+    );
   }
 
   String _formatCoins(int count) {

@@ -221,7 +221,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.xs),
 
-            // 6-Tile Statistics Grid
+            // 4-Tile Statistics Grid
             Row(
               children: [
                 Expanded(
@@ -230,28 +230,6 @@ class ProfileScreen extends StatelessWidget {
                     value: '${profile.puzzlesSolved}',
                     label: 'Levels Solved',
                     color: const Color(0xFF6C5CE7),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: _buildStatTile(
-                    icon: Icons.search_rounded,
-                    value: '${profile.wordsFound}',
-                    label: 'Words Found',
-                    color: AppColors.primaryCyan,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatTile(
-                    icon: Icons.timer_outlined,
-                    value: profile.playTime,
-                    label: 'Play Time',
-                    color: AppColors.primaryEmerald,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -593,30 +571,327 @@ class ProfileScreen extends StatelessWidget {
     BuildContext context,
     PlayerProfileProvider profile,
   ) {
-    final controller = TextEditingController(text: profile.nickname);
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Edit Nickname'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'Enter new nickname'),
+      builder: (ctx) => _EditNicknameDialog(
+        currentNickname: profile.nickname,
+        onSave: (newName) => profile.updateNickname(newName),
+      ),
+    );
+  }
+}
+
+class _EditNicknameDialog extends StatefulWidget {
+  final String currentNickname;
+  final ValueChanged<String> onSave;
+
+  const _EditNicknameDialog({
+    required this.currentNickname,
+    required this.onSave,
+  });
+
+  @override
+  State<_EditNicknameDialog> createState() => _EditNicknameDialogState();
+}
+
+class _EditNicknameDialogState extends State<_EditNicknameDialog> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+  String? _errorText;
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.currentNickname);
+    _focusNode = FocusNode();
+    _focusNode.addListener(() {
+      setState(() => _isFocused = _focusNode.hasFocus);
+    });
+    _controller.addListener(() {
+      if (_errorText != null) {
+        setState(() => _errorText = null);
+      } else {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final trimmed = _controller.text.trim();
+    if (trimmed.isEmpty) {
+      setState(() => _errorText = 'Nickname cannot be empty');
+      return;
+    }
+    if (trimmed.length < 3) {
+      setState(() => _errorText = 'Must be at least 3 characters');
+      return;
+    }
+    widget.onSave(trimmed);
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+    final currentLength = _controller.text.length;
+    const maxLength = 20;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF151928) : Colors.white,
+          borderRadius: AppRadius.radiusXl,
+          border: Border.all(
+            color: primary.withValues(alpha: 0.25),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.2),
+              blurRadius: 30,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                profile.updateNickname(controller.text.trim());
-              }
-              Navigator.of(ctx).pop();
-            },
-            child: const Text('Save'),
-          ),
-        ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header Icon Badge
+            Center(
+              child: Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      primary,
+                      theme.colorScheme.secondary,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: primary.withValues(alpha: 0.35),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.edit_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // Title & Subtitle
+            Text(
+              'Edit Nickname',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.headlineMedium(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Choose your display name for leaderboards and achievements',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodySmall(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Stylish Modernized TextField
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                borderRadius: AppRadius.radiusMd,
+                boxShadow: _isFocused
+                    ? [
+                        BoxShadow(
+                          color: primary.withValues(alpha: 0.15),
+                          blurRadius: 12,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : [],
+              ),
+              child: TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                maxLength: maxLength,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _save(),
+                style: AppTextStyles.headlineSmall(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onSurface,
+                ),
+                cursorColor: primary,
+                decoration: InputDecoration(
+                  counterText: '',
+                  hintText: 'Enter new nickname',
+                  hintStyle: AppTextStyles.bodyMedium(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
+                  ),
+                  filled: true,
+                  fillColor: isDark
+                      ? const Color(0xFF1E2438)
+                      : const Color(0xFFF8FAFC),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: primary.withValues(alpha: 0.12),
+                        borderRadius: AppRadius.radiusSm,
+                      ),
+                      child: Icon(
+                        Icons.person_rounded,
+                        color: primary,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                  suffixIcon: _controller.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(
+                            Icons.cancel_rounded,
+                            size: 20,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.4,
+                            ),
+                          ),
+                          onPressed: () => _controller.clear(),
+                          tooltip: 'Clear',
+                        )
+                      : null,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: AppRadius.radiusMd,
+                    borderSide: BorderSide(
+                      color: _errorText != null
+                          ? const Color(0xFFEF4444)
+                          : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                      width: 1.5,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: AppRadius.radiusMd,
+                    borderSide: BorderSide(
+                      color: _errorText != null
+                          ? const Color(0xFFEF4444)
+                          : primary,
+                      width: 2.0,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Character count & validation message
+            Padding(
+              padding: const EdgeInsets.only(top: 6, left: 4, right: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (_errorText != null)
+                    Expanded(
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline_rounded,
+                            size: 14,
+                            color: Color(0xFFEF4444),
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              _errorText!,
+                              style: const TextStyle(
+                                color: Color(0xFFEF4444),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Text(
+                      '3-20 characters',
+                      style: AppTextStyles.bodySmall().copyWith(
+                        fontSize: 11,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                      ),
+                    ),
+                  Text(
+                    '$currentLength/$maxLength',
+                    style: AppTextStyles.bodySmall().copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: currentLength >= maxLength
+                          ? AppColors.coinGoldDark
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Action Buttons: Cancel & Save
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    text: 'Cancel',
+                    variant: AppButtonVariant.secondary,
+                    height: 46,
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: AppButton(
+                    text: 'Save',
+                    icon: Icons.check_rounded,
+                    height: 46,
+                    onPressed: _controller.text.trim().isNotEmpty ? _save : null,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

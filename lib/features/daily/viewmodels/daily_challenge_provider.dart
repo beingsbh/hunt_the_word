@@ -33,27 +33,51 @@ class DailyChallengeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  String get _todayKey {
+    final now = DateTime.now();
+    return '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  }
+
   int get streak => (_dailyData['streak'] as num?)?.toInt() ?? 7;
   int get monthlyCount => (_dailyData['monthlyCount'] as num?)?.toInt() ?? 21;
   bool get isTodayCompleted {
     final completed = List<String>.from(
       _dailyData['completedDates'] as List? ?? [],
     );
-    return completed.contains('2024-09-21');
+    return completed.contains(_todayKey);
   }
 
-  List<CalendarDayItem> get weeklyCalendar => const [
-        CalendarDayItem(dayName: 'M', dateNumber: 16, isCompleted: true),
-        CalendarDayItem(dayName: 'T', dateNumber: 17, isCompleted: true),
-        CalendarDayItem(dayName: 'W', dateNumber: 18, isCompleted: true),
-        CalendarDayItem(dayName: 'T', dateNumber: 19, isCompleted: true),
-        CalendarDayItem(dayName: 'F', dateNumber: 20, isCompleted: true),
-        CalendarDayItem(dayName: 'SAT', dateNumber: 21, isToday: true),
-        CalendarDayItem(dayName: 'SUN', dateNumber: 22, isLocked: true),
-      ];
+  List<CalendarDayItem> get weeklyCalendar {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    const dayNames = ['M', 'T', 'W', 'T', 'F', 'SAT', 'SUN'];
+
+    final completed = List<String>.from(
+      _dailyData['completedDates'] as List? ?? [],
+    );
+
+    return List.generate(7, (i) {
+      final date = monday.add(Duration(days: i));
+      final dateKey =
+          '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final isToday = date.year == now.year &&
+          date.month == now.month &&
+          date.day == now.day;
+      final isFuture = date.isAfter(DateTime(now.year, now.month, now.day));
+      final isDateCompleted = completed.contains(dateKey);
+
+      return CalendarDayItem(
+        dayName: dayNames[i],
+        dateNumber: date.day,
+        isCompleted: isDateCompleted,
+        isToday: isToday,
+        isLocked: isFuture,
+      );
+    });
+  }
 
   void completeToday() {
-    _storage.markDailyCompleted('2024-09-21');
+    _storage.markDailyCompleted(_todayKey);
     _loadDaily();
   }
 }

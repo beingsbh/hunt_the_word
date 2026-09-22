@@ -20,6 +20,30 @@ class DailyChallengeScreen extends StatelessWidget {
   const DailyChallengeScreen({super.key});
 
   void _onStartChallenge(BuildContext context) {
+    final profile = context.read<PlayerProfileProvider>();
+    if (profile.coins < 20) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Daily Challenge entry requires 20 coins! Visit the Coin Store or earn coins from levels.',
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Deduct 20 coins entry stake
+    profile.updateCoins(-20);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Challenge entered (-20 coins). 3★ earns 3x (60🪙), 2★ earns 2x (40🪙)!',
+        ),
+        duration: Duration(seconds: 2),
+      ),
+    );
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => const GameScreen(
@@ -29,6 +53,25 @@ class DailyChallengeScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formattedTodayDate() {
+    final now = DateTime.now();
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return '${months[now.month - 1]} ${now.day}, ${now.year}';
   }
 
   @override
@@ -72,7 +115,7 @@ class DailyChallengeScreen extends StatelessWidget {
                       const Icon(Icons.calendar_today_rounded, size: 14),
                       const SizedBox(width: 4),
                       Text(
-                        'September 21, 2024',
+                        _formattedTodayDate(),
                         style: AppTextStyles.buttonSmall(
                           color: theme.colorScheme.onSurface,
                         ),
@@ -395,7 +438,7 @@ class DailyChallengeScreen extends StatelessWidget {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            'DAILY CLEAR BONUS: +50 Coins 🪙 & Golden Acorn Badge 🎖',
+                            'CHALLENGE STAKE: 20 Coins Entry 🪙 • 3★ Wins 3x (60🪙) • 2★ Wins 2x (40🪙)',
                             style: AppTextStyles.bodySmall().copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,

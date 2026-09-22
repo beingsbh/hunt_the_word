@@ -60,6 +60,19 @@ class PlayerProfileProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void advanceLevel(int newLevel) {
+    if (newLevel > currentLevel) {
+      _profile['currentLevel'] = newLevel;
+    }
+    if (newLevel > highestUnlockedLevel) {
+      _profile['highestUnlockedLevel'] = newLevel;
+    }
+    _profile['playerLevel'] = _profile['currentLevel'];
+    _profile['puzzlesSolved'] = puzzlesSolved + 1;
+    _storage.savePlayerProfile(_profile);
+    notifyListeners();
+  }
+
   void updateNickname(String name) {
     _profile['nickname'] = name;
     _storage.savePlayerProfile(_profile);
