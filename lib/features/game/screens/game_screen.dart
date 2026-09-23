@@ -120,6 +120,9 @@ class _GameScreenContentState extends State<_GameScreenContent> {
             vm.levelNumber,
             earnedStars,
             earnedScore,
+            elapsedTime: vm.elapsedSeconds.toDouble(),
+            wordsFound: vm.foundWords,
+            grid: vm.matrix,
           );
       context.read<PlayerProfileProvider>().advanceLevel(vm.levelNumber + 1);
       context.read<PlayerProfileProvider>().updateCoins(coinsToAward);

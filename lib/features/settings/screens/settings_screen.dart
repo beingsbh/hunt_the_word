@@ -15,6 +15,7 @@ import '../../auth/screens/login_screen.dart';
 import '../../levels/viewmodels/level_progress_provider.dart';
 import '../../profile/viewmodels/player_profile_provider.dart';
 import '../../themes/screens/themes_screen.dart';
+import '../../../core/network/api_endpoints.dart';
 
 /// Settings Screen for sound, haptics, cloud save, and reset options.
 class SettingsScreen extends StatefulWidget {
@@ -243,6 +244,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     value: _settings['cloudSave'] as bool? ?? true,
                     activeTrackColor: theme.colorScheme.primary,
                     onChanged: (val) => _updateSetting('cloudSave', val),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: Icon(
+                      Icons.cloud_done_rounded,
+                      color: ApiEndpoints.isServerOnline
+                          ? const Color(0xFF10B981)
+                          : Colors.amber.shade700,
+                    ),
+                    title: const Text('Backend API Server'),
+                    subtitle: Text(
+                      ApiEndpoints.isServerOnline
+                          ? 'Connected (${ApiEndpoints.baseUrl})'
+                          : 'Offline / Disconnected',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: ApiEndpoints.isServerOnline
+                            ? const Color(0xFF10B981)
+                            : Colors.amber.shade800,
+                      ),
+                    ),
+                    trailing: TextButton(
+                      onPressed: () async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        final profileProvider = context.read<PlayerProfileProvider>();
+                        final ok = await ApiEndpoints.init();
+                        if (!mounted) return;
+                        setState(() {});
+                        if (ok) {
+                          profileProvider.refreshFromStorage();
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('Connected to live Word Hunter backend!'),
+                              backgroundColor: Color(0xFF10B981),
+                            ),
+                          );
+                        } else {
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('Could not reach backend on localhost:5000'),
+                              backgroundColor: AppColors.error,
+                            ),
+                          );
+                        }
+                      },
+                      child: const Text('RECONNECT'),
+                    ),
                   ),
                 ],
               ),

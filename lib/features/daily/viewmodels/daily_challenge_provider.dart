@@ -38,8 +38,52 @@ class DailyChallengeProvider extends ChangeNotifier {
     return '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
-  int get streak => (_dailyData['streak'] as num?)?.toInt() ?? 7;
-  int get monthlyCount => (_dailyData['monthlyCount'] as num?)?.toInt() ?? 21;
+  static const List<String> _challengeCategories = [
+    'Nature Walk',
+    'Forest Flora',
+    'Ocean Creatures',
+    'Coral Reef',
+    'Cosmic Stars',
+    'Solar System',
+    'Autumn Breeze',
+    'Spring Meadow',
+    'Summer Coast',
+    'Winter Summit',
+  ];
+
+  int get streak => (_dailyData['streak'] as num?)?.toInt() ?? 0;
+  int get monthlyCount => (_dailyData['monthlyCount'] as num?)?.toInt() ?? 0;
+
+  String get todayCategory {
+    final now = DateTime.now();
+    final dayIndex =
+        (now.year * 365 + now.month * 31 + now.day) % _challengeCategories.length;
+    return _challengeCategories[dayIndex];
+  }
+
+  String get todayDifficulty {
+    final now = DateTime.now();
+    if (now.weekday == DateTime.saturday || now.weekday == DateTime.sunday) {
+      return '🔥 HARD';
+    }
+    if (now.weekday >= DateTime.thursday) {
+      return '⚡ MEDIUM';
+    }
+    return '🌱 EASY';
+  }
+
+  int get todayMaxPayout => 60;
+
+  int get completedThisWeekCount {
+    return weeklyCalendar.where((d) => d.isCompleted).length;
+  }
+
+  String get currentSeasonTitle {
+    final month = DateTime.now().month;
+    final quarter = ((month - 1) ~/ 3) + 1;
+    return 'SEASON $quarter';
+  }
+
   bool get isTodayCompleted {
     final completed = List<String>.from(
       _dailyData['completedDates'] as List? ?? [],

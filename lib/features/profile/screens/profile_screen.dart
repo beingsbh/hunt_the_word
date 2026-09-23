@@ -13,6 +13,7 @@ import '../../achievements/screens/achievements_screen.dart';
 import '../../levels/screens/level_map_screen.dart';
 import '../../settings/screens/settings_screen.dart';
 import '../../themes/screens/themes_screen.dart';
+import '../../../core/network/api_endpoints.dart';
 import '../viewmodels/player_profile_provider.dart';
 
 /// Player Profile screen matching the exact Word Hunt design mockup.
@@ -169,6 +170,45 @@ class ProfileScreen extends StatelessWidget {
                       style: AppTextStyles.buttonSmall(
                         color: theme.colorScheme.primary,
                       ).copyWith(fontSize: 11),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: (ApiEndpoints.isServerOnline
+                              ? const Color(0xFF10B981)
+                              : Colors.amber)
+                          .withValues(alpha: 0.15),
+                      borderRadius: AppRadius.radiusPill,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: ApiEndpoints.isServerOnline
+                                ? const Color(0xFF10B981)
+                                : Colors.amber.shade700,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          ApiEndpoints.isServerOnline
+                              ? 'Cloud Synced (MongoDB)'
+                              : 'Offline Mode',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: ApiEndpoints.isServerOnline
+                                ? const Color(0xFF10B981)
+                                : Colors.amber.shade700,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),

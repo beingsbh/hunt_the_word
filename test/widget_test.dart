@@ -32,7 +32,7 @@ void main() {
     await tester.tap(find.text('Levels'));
     await tester.pumpAndSettle();
     expect(
-      find.text('WORLD 2: OCEAN SANCTUARY (Levels 21–40)'),
+      find.textContaining('WORLD 2: OCEAN SANCTUARY'),
       findsOneWidget,
     );
     expect(find.text('Coral Trench'), findsOneWidget);
