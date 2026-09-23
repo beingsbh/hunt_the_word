@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hunt_the_word/features/levels/models/world_model.dart';
 import 'package:hunt_the_word/features/profile/viewmodels/player_profile_provider.dart';
 
 void main() {
@@ -94,6 +95,41 @@ void main() {
 
       // Level 40 (block 4): 45 * 1.5 = 67.5 -> 68
       expect(getReward(40), equals(68));
+    });
+
+    test('WorldModel computes progress and serializes JSON accurately', () {
+      final json = {
+        'worldNumber': 1,
+        'name': 'Verdant Forest',
+        'icon': '🌿',
+        'themeId': 'forest',
+        'category': 'Forest Flora',
+        'startLevel': 1,
+        'endLevel': 20,
+        'totalLevels': 20,
+        'unlocked': true,
+        'isCompleted': false,
+        'completedLevels': 10,
+        'starsEarned': 28,
+        'maxStars': 60,
+      };
+
+      final world = WorldModel.fromJson(json);
+      expect(world.worldNumber, equals(1));
+      expect(world.name, equals('Verdant Forest'));
+      expect(world.icon, equals('🌿'));
+      expect(world.completionProgress, equals(0.5));
+      expect(world.starProgress, closeTo(28 / 60, 0.001));
+      expect(world.levelRangeDisplay, equals('Levels 1–20'));
+      expect(world.fullTitle, equals('🌿 World 1: Verdant Forest'));
+
+      final defaultWorlds = WorldModel.getDefaultWorlds(highestUnlockedLevel: 25);
+      expect(defaultWorlds.length, equals(10));
+      expect(defaultWorlds[0].unlocked, isTrue); // World 1 (1-20)
+      expect(defaultWorlds[0].isCompleted, isTrue);
+      expect(defaultWorlds[1].unlocked, isTrue); // World 2 (21-40)
+      expect(defaultWorlds[1].isCompleted, isFalse);
+      expect(defaultWorlds[2].unlocked, isFalse); // World 3 (41-60)
     });
   });
 }

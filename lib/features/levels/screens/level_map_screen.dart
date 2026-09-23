@@ -12,6 +12,7 @@ import '../../../core/widgets/gradient_background.dart';
 import '../../../core/widgets/star_display.dart';
 import '../../game/screens/game_screen.dart';
 import '../../profile/viewmodels/player_profile_provider.dart';
+import '../models/world_model.dart';
 import '../viewmodels/level_progress_provider.dart';
 
 /// Level Map Screen matching the winding oceanic progression path design.
@@ -71,79 +72,325 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
     return reward.round();
   }
 
-  String _getWorldTitle(int world) {
-    switch (world) {
-      case 1:
-        return 'WORLD 1: VERDANT FOREST (Levels 1–20)';
-      case 2:
-        return 'WORLD 2: OCEAN SANCTUARY (Levels 21–40)';
-      case 3:
-        return 'WORLD 3: SKY REALM (Levels 41–60)';
-      default:
-        final start = (world - 1) * 20 + 1;
-        final end = world * 20;
-        return 'WORLD $world (Levels $start–$end)';
-    }
+  String _getWorldTitle(LevelProgressProvider levelProgress) {
+    final world = levelProgress.selectedWorld;
+    return '${world.icon} WORLD ${world.worldNumber}: ${world.name.toUpperCase()} (${world.levelRangeDisplay})';
   }
 
   void _showWorldPicker(BuildContext context, LevelProgressProvider provider) {
+    final theme = Theme.of(context);
+    final worlds = provider.worlds;
+    final totalStars = worlds.fold<int>(0, (sum, w) => sum + w.starsEarned);
+    final totalMaxStars = worlds.fold<int>(0, (sum, w) => sum + w.maxStars);
+    final unlockedCount = worlds.where((w) => w.unlocked).length;
+
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.4,
+        maxChildSize: 0.92,
+        builder: (_, scrollSheetController) => Container(
+          decoration: BoxDecoration(
+            color: theme.scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.25),
+                blurRadius: 20,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Select World', style: AppTextStyles.headlineSmall()),
+              // Drag Handle
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               const SizedBox(height: AppSpacing.sm),
-              ListTile(
-                leading:
-                    const Icon(Icons.forest_rounded, color: AppColors.success),
-                title: const Text('World 1: Verdant Forest (Levels 1–20)'),
-                trailing: provider.currentWorld == 1
-                    ? const Icon(Icons.check, color: AppColors.success)
-                    : null,
-                onTap: () {
-                  provider.setWorld(1);
-                  Navigator.pop(ctx);
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    _scrollToActiveLevel();
-                  });
-                },
+
+              // Sheet Header
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.xs,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'World Map 🗺️',
+                                style: AppTextStyles.headlineSmall(),
+                              ),
+                              if (provider.isLoadingWorlds) ...[
+                                const SizedBox(width: 8),
+                                const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              ],
+                            ],
+                          ),
+                          Text(
+                            '$unlockedCount of ${worlds.length} Worlds Unlocked',
+                            style: AppTextStyles.bodySmall(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.coinGoldDark.withValues(alpha: 0.15),
+                        borderRadius: AppRadius.radiusPill,
+                        border: Border.all(
+                          color: AppColors.coinGoldDark.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 16,
+                            color: AppColors.coinGoldDark,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$totalStars/$totalMaxStars',
+                            style: AppTextStyles.buttonSmall(
+                              color: AppColors.coinGoldDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              ListTile(
-                leading:
-                    const Icon(Icons.waves_rounded, color: Color(0xFF00B4D8)),
-                title: const Text('World 2: Ocean Sanctuary (Levels 21–40)'),
-                trailing: provider.currentWorld == 2
-                    ? const Icon(Icons.check, color: Color(0xFF00B4D8))
-                    : null,
-                onTap: () {
-                  provider.setWorld(2);
-                  Navigator.pop(ctx);
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    _scrollToActiveLevel();
-                  });
-                },
-              ),
-              ListTile(
-                leading:
-                    const Icon(Icons.cloud_rounded, color: Color(0xFF6C5CE7)),
-                title: const Text('World 3: Sky Realm (Levels 41–60)'),
-                trailing: provider.currentWorld == 3
-                    ? const Icon(Icons.check, color: Color(0xFF6C5CE7))
-                    : null,
-                onTap: () {
-                  provider.setWorld(3);
-                  Navigator.pop(ctx);
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    _scrollToActiveLevel();
-                  });
-                },
+              const Divider(height: AppSpacing.lg),
+
+              // World List
+              Expanded(
+                child: ListView.separated(
+                  controller: scrollSheetController,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
+                  ),
+                  itemCount: worlds.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+                  itemBuilder: (context, index) {
+                    final WorldModel world = worlds[index];
+                    final isCurrent = provider.currentWorld == world.worldNumber;
+                    final isUnlocked = world.unlocked;
+
+                    return GestureDetector(
+                      onTap: () {
+                        if (isUnlocked) {
+                          provider.setWorld(world.worldNumber);
+                          Navigator.pop(ctx);
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            _scrollToActiveLevel();
+                          });
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Reach Level ${world.startLevel} to unlock ${world.name}!',
+                              ),
+                              duration: const Duration(seconds: 2),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        padding: AppSpacing.paddingMd,
+                        decoration: BoxDecoration(
+                          color: isCurrent
+                              ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                              : (isUnlocked
+                                  ? theme.cardColor
+                                  : theme.cardColor.withValues(alpha: 0.45)),
+                          borderRadius: AppRadius.radiusMd,
+                          border: Border.all(
+                            color: isCurrent
+                                ? theme.colorScheme.primary
+                                : (isUnlocked
+                                    ? theme.dividerColor.withValues(alpha: 0.2)
+                                    : Colors.transparent),
+                            width: isCurrent ? 2.0 : 1.0,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                // World Emoji / Icon
+                                Container(
+                                  width: 46,
+                                  height: 46,
+                                  decoration: BoxDecoration(
+                                    color: isUnlocked
+                                        ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                                        : Colors.grey.withValues(alpha: 0.15),
+                                    borderRadius: AppRadius.radiusMd,
+                                  ),
+                                  child: Center(
+                                    child: isUnlocked
+                                        ? Text(
+                                            world.icon,
+                                            style: const TextStyle(fontSize: 22),
+                                          )
+                                        : const Icon(
+                                            Icons.lock_rounded,
+                                            size: 20,
+                                            color: Colors.grey,
+                                          ),
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+
+                                // Title and Subtitle
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              'World ${world.worldNumber}: ${world.name}',
+                                              style: AppTextStyles.headlineSmall().copyWith(
+                                                fontSize: 15,
+                                                color: isUnlocked
+                                                    ? theme.colorScheme.onSurface
+                                                    : theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          if (world.isCompleted) ...[
+                                            const SizedBox(width: 4),
+                                            const Icon(
+                                              Icons.check_circle_rounded,
+                                              size: 16,
+                                              color: AppColors.success,
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        isUnlocked
+                                            ? '${world.levelRangeDisplay} • ${world.category}'
+                                            : 'Unlocks at Level ${world.startLevel}',
+                                        style: AppTextStyles.bodySmall().copyWith(
+                                          color: isUnlocked
+                                              ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                                              : Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // Trailing Pill or Arrow
+                                if (isCurrent)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryEmerald.withValues(alpha: 0.18),
+                                      borderRadius: AppRadius.radiusPill,
+                                      border: Border.all(
+                                        color: AppColors.primaryEmerald.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'ACTIVE',
+                                      style: TextStyle(
+                                        color: AppColors.primaryEmerald,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  )
+                                else if (isUnlocked)
+                                  Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 14,
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                                  )
+                                else
+                                  const Icon(
+                                    Icons.lock_outline_rounded,
+                                    size: 16,
+                                    color: Colors.grey,
+                                  ),
+                              ],
+                            ),
+
+                            // Progress Bar & Stats (if unlocked)
+                            if (isUnlocked) ...[
+                              const SizedBox(height: AppSpacing.sm),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(2),
+                                child: LinearProgressIndicator(
+                                  value: world.completionProgress,
+                                  minHeight: 4,
+                                  backgroundColor: theme.dividerColor.withValues(alpha: 0.15),
+                                  valueColor: const AlwaysStoppedAnimation<Color>(
+                                    AppColors.primaryEmerald,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '${world.completedLevels}/${world.totalLevels} levels',
+                                    style: AppTextStyles.bodySmall().copyWith(fontSize: 11),
+                                  ),
+                                  Text(
+                                    '⭐ ${world.starsEarned}/${world.maxStars}',
+                                    style: AppTextStyles.bodySmall().copyWith(
+                                      fontSize: 11,
+                                      color: AppColors.coinGoldDark,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -156,26 +403,9 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
     BuildContext context,
     LevelProgressProvider levelProgress,
   ) {
-    final currentWorld = levelProgress.currentWorld;
-    final int startLevel;
-    final int endLevel;
-    switch (currentWorld) {
-      case 1:
-        startLevel = 1;
-        endLevel = 20;
-        break;
-      case 2:
-        startLevel = 21;
-        endLevel = 30;
-        break;
-      case 3:
-        startLevel = 31;
-        endLevel = 40;
-        break;
-      default:
-        startLevel = (currentWorld - 1) * 10 + 1;
-        endLevel = currentWorld * 10;
-    }
+    final selectedWorld = levelProgress.selectedWorld;
+    final int startLevel = selectedWorld.startLevel;
+    final int endLevel = selectedWorld.endLevel;
 
     final widgets = <Widget>[];
     for (int lvl = endLevel; lvl >= startLevel; lvl--) {
@@ -184,7 +414,9 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
         widgets.add(_buildBossNode(
           context,
           level: lvl,
-          title: node.title.isNotEmpty ? node.title : 'Star Gate Boss',
+          title: node.title.isNotEmpty
+              ? node.title
+              : '${selectedWorld.name} Star Gate',
           rewardCoins: 500,
           isUnlocked: node.isUnlocked,
         ));
@@ -199,7 +431,7 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
           isUnlocked: node.isUnlocked,
         ));
       } else if (node.isCurrent) {
-        widgets.add(_buildActiveLevelCard(context, node));
+        widgets.add(_buildActiveLevelCard(context, node, selectedWorld.category));
       } else if (node.isCompleted) {
         widgets.add(_buildCompletedNode(
           context,
@@ -235,68 +467,79 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
       appBar: AppCustomBar(
         title: 'Level Map',
         actions: [
+          IconButton(
+            icon: const Icon(Icons.map_rounded, color: AppColors.primaryEmerald),
+            tooltip: 'World Map 🗺️',
+            onPressed: () => _showWorldPicker(context, levelProgress),
+          ),
           CoinBadge(coins: profile.coins),
           const SizedBox(width: AppSpacing.sm),
         ],
       ),
       body: GradientBackground(
-        child: Column(
-          children: [
-            // Chapter Selector Dropdown Pill
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: 4,
-              ),
-              child: GestureDetector(
-                onTap: () => _showWorldPicker(context, levelProgress),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                    borderRadius: AppRadius.radiusPill,
-                    border: Border.all(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await levelProgress.refreshWorlds();
+          },
+          child: Column(
+            children: [
+              // Chapter Selector Dropdown Pill
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: 4,
+                ),
+                child: GestureDetector(
+                  onTap: () => _showWorldPicker(context, levelProgress),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: 8,
                     ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          _getWorldTitle(levelProgress.currentWorld),
-                          style: AppTextStyles.buttonSmall(
-                            color: theme.colorScheme.primary,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      borderRadius: AppRadius.radiusPill,
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            _getWorldTitle(levelProgress),
+                            style: AppTextStyles.buttonSmall(
+                              color: theme.colorScheme.primary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_drop_down,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.arrow_drop_down,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            // Vertical Winding Progression Path
-            Expanded(
-              child: ListView(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(AppSpacing.md),
-                children: [
-                  ..._buildProgressionPath(context, levelProgress),
-                  const SizedBox(height: 100),
-                ],
+              // Vertical Winding Progression Path
+              Expanded(
+                child: ListView(
+                  controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  children: [
+                    ..._buildProgressionPath(context, levelProgress),
+                    const SizedBox(height: 100),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       floatingActionButton: Padding(
@@ -308,7 +551,11 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
           onPressed: () {
             final activeNode =
                 levelProgress.getLevelNode(levelProgress.activeLevel);
-            _onStartLevel(context, activeNode.levelNumber, activeNode.title);
+            _onStartLevel(
+              context,
+              activeNode.levelNumber,
+              levelProgress.selectedWorld.category,
+            );
           },
           child: const Icon(Icons.play_arrow_rounded, color: Colors.white),
         ),
@@ -316,7 +563,11 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
     );
   }
 
-  Widget _buildActiveLevelCard(BuildContext context, LevelNodeState node) {
+  Widget _buildActiveLevelCard(
+    BuildContext context,
+    LevelNodeState node, [
+    String? category,
+  ]) {
     return Container(
       key: _activeLevelKey,
       child: TweenAnimationBuilder<double>(
@@ -431,8 +682,11 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
             AppButton(
               text: 'PLAY NOW',
               icon: Icons.play_arrow_rounded,
-              onPressed: () =>
-                  _onStartLevel(context, node.levelNumber, node.title),
+              onPressed: () => _onStartLevel(
+                context,
+                node.levelNumber,
+                category ?? node.title,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Center(

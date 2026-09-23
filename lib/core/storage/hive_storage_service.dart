@@ -19,6 +19,8 @@ class HiveStorageService {
   Box? _activeGameBox;
   Box? _dailyBox;
   Box? _achievementsBox;
+  Box? _authBox;
+  Box? _syncBox;
 
   Future<void> init() async {
     if (_initialized) return;
@@ -31,6 +33,8 @@ class HiveStorageService {
     _activeGameBox = await Hive.openBox(StorageConstants.activeGameBox);
     _dailyBox = await Hive.openBox(StorageConstants.dailyBox);
     _achievementsBox = await Hive.openBox(StorageConstants.achievementsBox);
+    _authBox = await Hive.openBox(StorageConstants.authBox);
+    _syncBox = await Hive.openBox(StorageConstants.syncBox);
 
     _initialized = true;
   }
@@ -39,26 +43,32 @@ class HiveStorageService {
   Map<String, dynamic> getPlayerProfile() {
     final raw = _playerBox?.get(StorageConstants.keyPlayerProfile);
     if (raw is Map) {
-      return Map<String, dynamic>.from(raw);
+      final map = Map<String, dynamic>.from(raw);
+      if (map['nickname'] == 'Subha WordMaster') {
+        map['nickname'] = 'Word Hunter';
+        map['playerTag'] = '#WH-1001';
+        map['playerTitle'] = 'Word Novice';
+      }
+      return map;
     }
-    // Default values matching the high-fidelity mockups
+    // Clean default values for fresh players
     return {
-      'nickname': 'Subha WordMaster',
-      'playerTag': '#WH-9824',
-      'playerTitle': 'Explorer Tier II',
-      'playerLevel': 12,
-      'coins': 500,
-      'totalStars': 78,
-      'currentLevel': 27,
-      'highestUnlockedLevel': 27,
-      'streak': 7,
-      'puzzlesSolved': 72,
-      'wordsFound': 845,
-      'accuracyRate': 94.2,
-      'bestScore': 4820,
-      'playTime': '18.5h',
+      'nickname': 'Word Hunter',
+      'playerTag': '#WH-1001',
+      'playerTitle': 'Word Novice',
+      'playerLevel': 1,
+      'coins': 100,
+      'totalStars': 0,
+      'currentLevel': 1,
+      'highestUnlockedLevel': 1,
+      'streak': 0,
+      'puzzlesSolved': 0,
+      'wordsFound': 0,
+      'accuracyRate': 100.0,
+      'bestScore': 0,
+      'playTime': '0m',
       'activeThemeId': 'emerald_meadow',
-      'unlockedThemes': ['emerald_meadow', 'cosmic_midnight'],
+      'unlockedThemes': ['emerald_meadow'],
       'hasSetUniqueUsername': false,
       'needsUsernameSetup': false,
     };
@@ -140,22 +150,35 @@ class HiveStorageService {
     }
   }
 
+  // --- World Progression ---
+  List<Map<String, dynamic>>? getCachedWorlds() {
+    final raw = _levelsBox?.get('cached_worlds');
+    if (raw is List) {
+      return raw.map((item) => Map<String, dynamic>.from(item as Map)).toList();
+    }
+    return null;
+  }
+
+  Future<void> saveWorlds(List<Map<String, dynamic>> worlds) async {
+    await _levelsBox?.put('cached_worlds', worlds);
+  }
+
   // --- Daily Challenge ---
   Map<String, dynamic> getDailyData() {
     final raw = _dailyBox?.get(StorageConstants.keyDailyData);
     if (raw is Map) {
-      return Map<String, dynamic>.from(raw);
+      final map = Map<String, dynamic>.from(raw);
+      final dates = List<String>.from(map['completedDates'] as List? ?? []);
+      if (dates.any((d) => d.startsWith('2024-'))) {
+        dates.removeWhere((d) => d.startsWith('2024-'));
+        map['completedDates'] = dates;
+      }
+      return map;
     }
     return {
-      'streak': 7,
-      'completedDates': <String>[
-        '2024-09-16',
-        '2024-09-17',
-        '2024-09-18',
-        '2024-09-19',
-        '2024-09-20',
-      ],
-      'monthlyCount': 21,
+      'streak': 0,
+      'completedDates': <String>[],
+      'monthlyCount': 0,
     };
   }
 
@@ -203,5 +226,65 @@ class HiveStorageService {
 
   Future<void> saveSettings(Map<String, dynamic> settings) async {
     await _settingsBox?.put(StorageConstants.keySettings, settings);
+  }
+
+  // --- Auth & Identity ---
+  Map<String, dynamic>? getAuthTokens() {
+    final raw = _authBox?.get(StorageConstants.keyAuthTokens);
+    if (raw is Map) {
+      return Map<String, dynamic>.from(raw);
+    }
+    return null;
+  }
+
+  Future<void> saveAuthTokens(Map<String, dynamic> tokens) async {
+    await _authBox?.put(StorageConstants.keyAuthTokens, tokens);
+  }
+
+  Future<void> clearAuthTokens() async {
+    await _authBox?.delete(StorageConstants.keyAuthTokens);
+  }
+
+  String getDeviceId() {
+    final saved = _authBox?.get(StorageConstants.keyDeviceId);
+    if (saved is String && saved.isNotEmpty) {
+      return saved;
+    }
+    final generated = 'device_${DateTime.now().millisecondsSinceEpoch}_${(1000 + (DateTime.now().microsecond % 9000))}';
+    _authBox?.put(StorageConstants.keyDeviceId, generated);
+    return generated;
+  }
+
+  // --- Offline Sync Queue ---
+  List<Map<String, dynamic>> getPendingSyncLevels() {
+    final raw = _syncBox?.get(StorageConstants.keyPendingSyncLevels);
+    if (raw is List) {
+      return raw.map((item) => Map<String, dynamic>.from(item as Map)).toList();
+    }
+    return [];
+  }
+
+  Future<void> addPendingSyncLevel(Map<String, dynamic> levelData) async {
+    final list = getPendingSyncLevels();
+    list.removeWhere((l) => l['levelNumber'] == levelData['levelNumber']);
+    list.add(levelData);
+    await _syncBox?.put(StorageConstants.keyPendingSyncLevels, list);
+  }
+
+  Future<void> clearPendingSyncLevels() async {
+    await _syncBox?.delete(StorageConstants.keyPendingSyncLevels);
+  }
+
+  // --- Cached Achievements ---
+  List<Map<String, dynamic>>? getCachedAchievements() {
+    final raw = _playerBox?.get('cached_achievements');
+    if (raw is List) {
+      return raw.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    }
+    return null;
+  }
+
+  Future<void> saveCachedAchievements(List<Map<String, dynamic>> list) async {
+    await _playerBox?.put('cached_achievements', list);
   }
 }

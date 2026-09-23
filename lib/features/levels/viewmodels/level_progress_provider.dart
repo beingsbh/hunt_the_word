@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/storage/hive_storage_service.dart';
+import '../../sync/repositories/sync_repository.dart';
+import '../models/world_model.dart';
+import '../repositories/levels_repository.dart';
 
 class LevelNodeState {
   final int levelNumber;
@@ -24,15 +27,26 @@ class LevelNodeState {
   });
 }
 
-/// Provider managing level map nodes, star totals, and chapter progress.
+/// Provider managing level map nodes, star totals, chapter progress, and cloud sync.
 class LevelProgressProvider extends ChangeNotifier {
-  final HiveStorageService _storage = HiveStorageService();
+  final HiveStorageService _storage;
+  final LevelsRepository _levelsRepo;
+  final SyncRepository _syncRepo;
 
   int _currentWorld = 2; // World 2: Ocean Sanctuary (Active)
   int _activeLevel = 27; // Level 27 Coral Trench (Active in mockups)
+  List<WorldModel> _worlds = [];
+  bool _isLoadingWorlds = false;
 
-  LevelProgressProvider() {
+  LevelProgressProvider({
+    HiveStorageService? storage,
+    LevelsRepository? levelsRepository,
+    SyncRepository? syncRepository,
+  })  : _storage = storage ?? HiveStorageService(),
+        _levelsRepo = levelsRepository ?? LevelsRepository(),
+        _syncRepo = syncRepository ?? SyncRepository() {
     _loadFromStorage();
+    _reconcileAndSync();
   }
 
   void _loadFromStorage() {
@@ -40,6 +54,42 @@ class LevelProgressProvider extends ChangeNotifier {
     final highest = (profile['highestUnlockedLevel'] as num?)?.toInt() ?? 27;
     _activeLevel = highest;
     _currentWorld = ((_activeLevel - 1) ~/ 20) + 1;
+
+    final cached = _storage.getCachedWorlds();
+    if (cached != null && cached.isNotEmpty) {
+      _worlds = cached.map((e) => WorldModel.fromJson(e)).toList();
+    } else {
+      _worlds = WorldModel.getDefaultWorlds(highestUnlockedLevel: _activeLevel);
+    }
+  }
+
+  /// Silently synchronizes offline queued completions and fetches latest server progression map
+  Future<void> _reconcileAndSync() async {
+    try {
+      await _syncRepo.reconcilePendingOfflineData();
+      final levelMapFuture = _levelsRepo.fetchLevelMap();
+      final worldsFuture = refreshWorlds();
+      await Future.wait([levelMapFuture, worldsFuture]);
+      _loadFromStorage();
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  /// Refreshes worlds data from the backend API with offline caching
+  Future<void> refreshWorlds() async {
+    _isLoadingWorlds = true;
+    notifyListeners();
+    try {
+      final fetchedWorlds = await _levelsRepo.fetchWorlds();
+      if (fetchedWorlds.isNotEmpty) {
+        _worlds = fetchedWorlds;
+      }
+    } catch (_) {
+      // Keep existing cached worlds on failure
+    } finally {
+      _isLoadingWorlds = false;
+      notifyListeners();
+    }
   }
 
   void resetProgress() {
@@ -49,6 +99,21 @@ class LevelProgressProvider extends ChangeNotifier {
 
   int get currentWorld => _currentWorld;
   int get activeLevel => _activeLevel;
+  List<WorldModel> get worlds => _worlds;
+  bool get isLoadingWorlds => _isLoadingWorlds;
+
+  WorldModel get selectedWorld {
+    if (_worlds.isNotEmpty) {
+      final found = _worlds.where((w) => w.worldNumber == _currentWorld);
+      if (found.isNotEmpty) return found.first;
+      return _worlds.first;
+    }
+    final defaultWorlds =
+        WorldModel.getDefaultWorlds(highestUnlockedLevel: _activeLevel);
+    final found = defaultWorlds.where((w) => w.worldNumber == _currentWorld);
+    if (found.isNotEmpty) return found.first;
+    return defaultWorlds.first;
+  }
 
   void setWorld(int world) {
     _currentWorld = world;
@@ -110,8 +175,18 @@ class LevelProgressProvider extends ChangeNotifier {
     }
   }
 
-  void completeLevel(int levelNumber, int stars, int score) {
+  /// Completes a level: immediately updates local state, then submits to server with offline fallback.
+  void completeLevel(
+    int levelNumber,
+    int stars,
+    int score, {
+    double elapsedTime = 30.0,
+    List<String>? wordsFound,
+    List<List<String>>? grid,
+  }) {
+    // 1. Immediate local persistence
     _storage.saveLevelProgress(levelNumber, stars, score);
+
     if (levelNumber >= _activeLevel) {
       _activeLevel = levelNumber + 1;
       _currentWorld = ((_activeLevel - 1) ~/ 20) + 1;
@@ -124,6 +199,29 @@ class LevelProgressProvider extends ChangeNotifier {
       _storage.savePlayerProfile(profile);
     }
     notifyListeners();
+
+    // 2. Asynchronous API submission
+    _levelsRepo
+        .completeLevel(
+          levelNumber: levelNumber,
+          stars: stars,
+          score: score,
+          elapsedTime: elapsedTime,
+          wordsFound: wordsFound ?? ['WORD', 'HUNT'],
+          grid: grid,
+        )
+        .then((_) => refreshWorlds())
+        .ignore();
+  }
+
+  /// Claims milestone mystery box reward
+  Future<bool> claimMysteryBox(int levelNumber) async {
+    final res = await _levelsRepo.claimMysteryBox(levelNumber);
+    if (res.isSuccessful) {
+      notifyListeners();
+      return true;
+    }
+    return false;
   }
 
   String _getLevelTitle(int level) {
